@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #f0f2f5;
+      font-family: sans-serif;
+    }
+
+    .button-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .main-button {
+      width: 300px;
+      height: 300px;
+      background-color: #4a90e2;
+      color: white;
+      font-size: 1.5rem;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      transition: background-color 0.3s;
+    }
+
+    .main-button:hover {
+      background-color: #357ac9;
+    }
+
+    .main-button:disabled {
+      background-color: #ccc;
+      color: #666;
+      cursor: not-allowed;
+      opacity: 0.7;
+      box-shadow: none;
+    }
+
+    .secondary-button {
+      width: 300px;
+      height: 30px;
+      background-color: #777;
+      color: white;
+      font-size: 1rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: background-color 0.3s;
+    }
+
+    .secondary-button:hover {
+      background-color: #555;
+    }
+  </style>
+</head>
+<body>
+<div id="embed-iframe"></div>
+<div class="button-container">
+    <button id="playBtn" class="main-button">Play</button>
+    <button id="nextBtn" class="secondary-button">></button>
+</div>
+
+<script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
+<script>
+    let iFrameApi;
+
+    window.onSpotifyIframeApiReady = (IFrameAPI) => {
+        iFrameApi = IFrameAPI;
+        start();
+    };
+
+    async function start(){
+        let counter = 0;
+        let songs = shuffle(await getSongs());
+        let currentSong = songs[counter];
+
+        const element = document.getElementById('embed-iframe');
+        const options = {
+            width: '0',
+            height: '0',
+            uri: `spotify:track:${currentSong['id']}`
+        };
+        const callback = (EmbedController) => {
+            document.getElementById('playBtn').addEventListener('click', () => {
+                EmbedController.resume();
+                togglePlayBtn();
+                setTimeout(() => {
+                    EmbedController.pause();
+                    document.getElementById('playBtn').innerText = "Done"
+                }, 70000);
+            });
+
+            document.getElementById('nextBtn')
+                .addEventListener('click', () => {
+                    counter++;
+                    let nextSongSpotify = songs[counter];
+                    togglePlayBtn();
+                    EmbedController.loadUri(`spotify:track:${nextSongSpotify['id']}`)
+                    currentSong = nextSongSpotify;
+                });
+        };
+        iFrameApi.createController(element, options, callback);
+    }
+
+    function togglePlayBtn() {
+        let playBtn = document.getElementById('playBtn');
+        playBtn.disabled = !playBtn.disabled;
+
+        if (playBtn.disabled) {
+            playBtn.innerText = "Playing..."
+        } else {
+            playBtn.innerText = "Play"
+        }
+    }
+
+    async function getSongs(){
+        let response = await fetch('http://localhost:8000/songfy/get-songs')
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return await response.json();
+    }
+
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1)); // random index from 0 to i
+            [array[i], array[j]] = [array[j], array[i]];   // swap elements
+        }
+        return array;
+    }
+</script>
+</body>
+</html>
