@@ -14,11 +14,16 @@
       font-family: sans-serif;
     }
 
-    .button-container {
+    .btn-container {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 20px;
+    }
+
+    .info-container {
+      font-size: large;
+      font-weight: bold;
     }
 
     .main-button {
@@ -66,10 +71,19 @@
 </head>
 <body>
 <div id="embed-iframe"></div>
-<div class="button-container">
-    <button id="playBtn" class="main-button">Play</button>
-    <button id="nextBtn" class="secondary-button">></button>
+<div>
+    <div id="buttonContainer" class="btn-container">
+        <button id="playBtn" class="main-button">Play</button>
+    </div>
+
+    <div id="infoContainer" class="info-container" hidden>
+        <p>Name: <span id="nameSpan"></span></p>
+        <p>Artists: <span id="artistsSpan"></span></p>
+        <p>Release Date: <span id="releaseSpan"></span></p>
+    </div>
+<button id="nextBtn" class="secondary-button">></button>
 </div>
+
 
 <script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
 <script>
@@ -82,8 +96,9 @@
 
     async function start(){
         let counter = 0;
-        let songs = shuffle(await getSongs());
+        let songs = shuffle((await getSongs()).filter(s => !s.yearReleased.includes('2025')));
         let currentSong = songs[counter];
+        console.log('loaded')
 
         const element = document.getElementById('embed-iframe');
         const options = {
@@ -98,17 +113,25 @@
                 setTimeout(() => {
                     EmbedController.pause();
                     document.getElementById('playBtn').innerText = "Done"
-                }, 70000);
+                }, 40000);
             });
 
             document.getElementById('nextBtn')
                 .addEventListener('click', () => {
+                    document.getElementById('nameSpan').innerText = currentSong.name;
+                    document.getElementById('artistsSpan').innerText = currentSong.artists.join(', ');
+                    document.getElementById('releaseSpan').innerText = currentSong.yearReleased;
                     counter++;
-                    let nextSongSpotify = songs[counter];
-                    togglePlayBtn();
-                    EmbedController.loadUri(`spotify:track:${nextSongSpotify['id']}`)
-                    currentSong = nextSongSpotify;
+                    currentSong = songs[counter];
+                    EmbedController.loadUri(`spotify:track:${currentSong['id']}`);
+                    toggleDisplayedContainer();
                 });
+
+        let infoContainer = document.getElementById('infoContainer');
+        let btnContainer = document.getElementById('buttonContainer');
+            document.getElementById('nameSpan').innerText = currentSong.name;
+            document.getElementById('artistsSpan').innerText = currentSong.artists.join(', ');
+            document.getElementById('releaseSpan').innerText = currentSong.yearReleased;
         };
         iFrameApi.createController(element, options, callback);
     }
@@ -131,6 +154,24 @@
         }
 
         return await response.json();
+    }
+
+    function toggleDisplayedContainer(EmbedController, currentSong, counter) {
+        let infoContainer = document.getElementById('infoContainer');
+        let btnContainer = document.getElementById('buttonContainer');
+
+        if (infoContainer.hidden) {
+            btnContainer.classList.remove('btn-container');
+            infoContainer.classList.add('info-container');
+            infoContainer.hidden = false
+            btnContainer.hidden = true
+        } else {
+            togglePlayBtn();
+            infoContainer.hidden = true;
+            btnContainer.hidden = false;
+            infoContainer.classList.remove('info-container');
+            btnContainer.classList.add('btn-container');
+        }
     }
 
     function shuffle(array) {
