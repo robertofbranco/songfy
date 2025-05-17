@@ -1,14 +1,13 @@
-from dotenv import dotenv_values
+from os import getenv
 from spotipy import Spotify, SpotifyOAuth, SpotifyClientCredentials
 from app.song import Song
 
 
 class SpotifyService:
     SEARCH_LIMIT = 3
-    config = dotenv_values()
-    CLIENT_ID = config["CLIENT_ID"]
-    CLIENT_SECRET = config["CLIENT_SECRET"]
-    REDIRECT_URI = config["REDIRECT_URI"]
+    CLIENT_ID = getenv("CLIENT_ID")
+    CLIENT_SECRET = getenv("CLIENT_SECRET")
+    REDIRECT_URI = getenv("REDIRECT_URI")
     SCOPE = "user-library-read"
     sp_oauth = SpotifyOAuth(
         client_id=CLIENT_ID,

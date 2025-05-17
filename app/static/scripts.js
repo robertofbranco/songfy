@@ -8,6 +8,7 @@ Non-priority:
     Allow multiple rooms/matches to be created
 */
 
+const API_ADDRESS = 'https://songfy-dueae8btf4dnasbx.polandcentral-01.azurewebsites.net/'; //'http://localhost:8000'
 let iFrameApi;
 let players = [];
 let currentPlayer = 0;
@@ -75,7 +76,7 @@ function togglePlayBtn(state) {
 }
 
 async function getSongs() {
-    let response = await fetch('http://192.168.100.5:8000/songfy/get-songs')
+    let response = await fetch(`${API_ADDRESS}/songfy/get-songs`);
     if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
     }
