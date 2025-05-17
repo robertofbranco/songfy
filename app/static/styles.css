@@ -1,0 +1,205 @@
+body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #f0f2f5;
+    font-family: sans-serif;
+}
+
+.main-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    gap: 20px;
+}
+
+.button-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.info-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.info-container button {
+    flex: 1;
+}
+
+.info-container span {
+    font-size: large;
+    font-weight: bold;
+}
+
+.custom-checkbox {
+    display: inline-flex;
+    align-items: center;
+    border: 2px solid #ccc;
+    border-radius: 6px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 16px;
+    transition: border-color 0.3s;
+    overflow: hidden; /* Ensures rounded edges are clean */
+}
+
+.custom-checkbox:hover {
+    border-color: #888;
+}
+
+.custom-checkbox input {
+    display: none;
+}
+
+.custom-checkbox .checkmark {
+    width: 40px; /* Wider so it visually balances */
+    height: 100%;
+    min-height: 40px;
+    border-right: 2px solid #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    background-color: #f9f9f9;
+}
+
+.custom-checkbox input:checked + .checkmark {
+    background-color: #e0f0ff;
+}
+
+.custom-checkbox input:checked + .checkmark::after {
+    content: "";
+    width: 6px;
+    height: 12px;
+    border: solid #2196F3;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.checkbox-label-text {
+    padding: 10px 14px;
+}
+
+.main-button {
+    width: 300px;
+    height: 300px;
+}
+
+.main-button:hover {
+    background-color: #357ac9;
+}
+
+.button {
+    cursor: pointer;
+}
+
+.button:disabled {
+    background-color: #ccc;
+    color: #666;
+    cursor: not-allowed;
+    opacity: 0.7;
+    box-shadow: none;
+}
+
+.primary-button {
+    background-color: #007bff;
+    padding: 0.5rem 1rem;
+    color: white;
+    font-size: 1.5rem;
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s;
+}
+
+.secondary-button {
+    width: 300px;
+    height: 40px;
+    background-color: #777;
+    color: white;
+    font-size: 1.5rem;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s;
+}
+
+.secondary-button:hover {
+    background-color: #555;
+}
+
+.add-player-container {
+    display: flex;
+    width: 100%;
+    max-width: 400px;
+}
+
+.add-player-container input {
+    flex: 1;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-right: none;
+    border-radius: 0.5rem 0 0 0.5rem;
+    outline: none;
+}
+
+.players-container button {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    background-color: #007bff;
+    color: white;
+    border-radius: 0 0.5rem 0.5rem 0;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.add-player-container button:hover {
+    background-color: #0056b3;
+}
+
+.players-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-left: 1px solid #ccc;
+    padding-left: 20px;
+}
+
+.player-container {
+    display: flex;
+    width: 100%;
+    max-width: 400px;
+}
+
+.current-player div {
+    color: #007bff;
+}
+
+.player-container div {
+    display: flex;
+    flex: 1;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+    border: 1px solid #ccc;
+    border-right: none;
+    border-radius: 0.5rem 0 0 0.5rem;
+    outline: none;
+    gap: 5px;
+}
+
+.value {
+    font-weight: bold;
+}
+
+.player-container button {
+    background-color: white;
+    color: red;
+}

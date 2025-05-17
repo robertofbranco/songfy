@@ -7,7 +7,7 @@ import app.songfy as songfy
 app = FastAPI()
 
 # Mount the static folder to serve JS and CSS files
-#app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # Allow CORS for your frontend
 app.add_middleware(
