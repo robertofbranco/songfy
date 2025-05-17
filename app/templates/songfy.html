@@ -276,7 +276,7 @@
         Allow multiple rooms/matches to be created
         Create sets of songs to be selected, e.g., 2000s, Classic Rock, Brazilian Funk, Top Streamed etc.
     */
-
+    const API_ADDRESS = 'https://songfy-dueae8btf4dnasbx.polandcentral-01.azurewebsites.net/'; //'http://localhost:8000'
     let iFrameApi;
     let players = [];
     let currentPlayer = 0;
@@ -344,7 +344,7 @@
     }
 
     async function getSongs() {
-        let response = await fetch('http://192.168.100.5:8000/songfy/get-songs')
+        let response = await fetch(`${API_ADDRESS}/songfy/get-songs`)
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
