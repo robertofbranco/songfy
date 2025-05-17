@@ -2,15 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Songfy</title>
     <link rel="stylesheet" href="../static/styles.css">
 </head>
 <body>
 <div id="embed-iframe"></div>
-<div class="main-container" hidden>
+<!--<div id="playlistContainer" class="playlist-container">-->
+<!--    <h1 class="title">SONGFY</h1>-->
+<!--    <p>Insert the link to a Spotify's playlist to play with its songs-->
+<!--    or leave it empty to use default set</p>-->
+<!--    <input id="playlist-input" placeholder="Insert Spotify's playlist link here">-->
+<!--    <label for="playlist-input">-->
+<!--        <button id="get-songs-btn" class="primary-button">-->
+<!--            Get Songs-->
+<!--        </button>-->
+<!--    </label>-->
+<!--</div>-->
+<div id="gameContainer" class="game-container">
     <div id="buttonContainer" class="button-container">
-        <button id="playBtn" class="button primary-button main-button">Play</button>
-        <button id="nextBtn" class="button secondary-button">></button>
+        <button id="playBtn" class="primary-button main-button">Play</button>
+        <button id="nextBtn" class="secondary-button next-button">></button>
     </div>
     <div id="infoContainer" hidden>
         <div>
@@ -34,7 +46,7 @@
                 <span class="checkbox-label-text">Release Date: <span id="releaseSpan"></span></span>
             </label>
         </div>
-        <button class="button primary-button" id="confirmButton">Confirm</button>
+        <button class="primary-button" id="confirmButton">Confirm</button>
     </div>
     <div class="players-container">
         <div class="add-player-container">
@@ -47,5 +59,6 @@
 </div>
 
 <script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
+<script src="../static/scripts.js"></script>
 </body>
 </html>
