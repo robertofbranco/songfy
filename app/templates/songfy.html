@@ -4,101 +4,298 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #f0f2f5;
-      font-family: sans-serif;
-    }
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f0f2f5;
+            font-family: sans-serif;
+        }
 
-    .btn-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
-    }
+        .main-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+            gap: 20px;
+        }
 
-    .info-container {
-      font-size: large;
-      font-weight: bold;
-    }
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
 
-    .main-button {
-      width: 300px;
-      height: 300px;
-      background-color: #4a90e2;
-      color: white;
-      font-size: 1.5rem;
-      border: none;
-      border-radius: 20px;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      transition: background-color 0.3s;
-    }
+        .info-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
 
-    .main-button:hover {
-      background-color: #357ac9;
-    }
+        .info-container button {
+            flex: 1;
+        }
 
-    .main-button:disabled {
-      background-color: #ccc;
-      color: #666;
-      cursor: not-allowed;
-      opacity: 0.7;
-      box-shadow: none;
-    }
+        .info-container span {
+            font-size: large;
+            font-weight: bold;
+        }
 
-    .secondary-button {
-      width: 300px;
-      height: 30px;
-      background-color: #777;
-      color: white;
-      font-size: 1rem;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      transition: background-color 0.3s;
-    }
+        .custom-checkbox {
+            display: inline-flex;
+            align-items: center;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            cursor: pointer;
+            user-select: none;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            overflow: hidden; /* Ensures rounded edges are clean */
+        }
 
-    .secondary-button:hover {
-      background-color: #555;
-    }
-  </style>
+        .custom-checkbox:hover {
+            border-color: #888;
+        }
+
+        .custom-checkbox input {
+            display: none;
+        }
+
+        .custom-checkbox .checkmark {
+            width: 40px; /* Wider so it visually balances */
+            height: 100%;
+            min-height: 40px;
+            border-right: 2px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background-color: #f9f9f9;
+        }
+
+        .custom-checkbox input:checked + .checkmark {
+            background-color: #e0f0ff;
+        }
+
+        .custom-checkbox input:checked + .checkmark::after {
+            content: "";
+            width: 6px;
+            height: 12px;
+            border: solid #2196F3;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .checkbox-label-text {
+            padding: 10px 14px;
+        }
+
+        .main-button {
+            width: 300px;
+            height: 300px;
+        }
+
+        .main-button:hover {
+            background-color: #357ac9;
+        }
+
+        .button {
+            cursor: pointer;
+        }
+
+        .button:disabled {
+            background-color: #ccc;
+            color: #666;
+            cursor: not-allowed;
+            opacity: 0.7;
+            box-shadow: none;
+        }
+
+        .primary-button {
+            background-color: #007bff;
+            padding: 0.5rem 1rem;
+            color: white;
+            font-size: 1.5rem;
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s;
+        }
+
+        .secondary-button {
+            width: 300px;
+            height: 40px;
+            background-color: #777;
+            color: white;
+            font-size: 1.5rem;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s;
+        }
+
+        .secondary-button:hover {
+            background-color: #555;
+        }
+
+        .add-player-container {
+            display: flex;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .add-player-container input {
+            flex: 1;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-right: none;
+            border-radius: 0.5rem 0 0 0.5rem;
+            outline: none;
+        }
+
+        .players-container button {
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            background-color: #007bff;
+            color: white;
+            border-radius: 0 0.5rem 0.5rem 0;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .add-player-container button:hover {
+            background-color: #0056b3;
+        }
+
+        .players-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border-left: 1px solid #ccc;
+            padding-left: 20px;
+        }
+
+        .player-container {
+            display: flex;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .current-player div {
+            color: #007bff;
+        }
+
+        .player-container div {
+            display: flex;
+            flex: 1;
+            justify-content: space-between;
+            padding: 0.5rem 1rem;
+            border: 1px solid #ccc;
+            border-right: none;
+            border-radius: 0.5rem 0 0 0.5rem;
+            outline: none;
+            gap: 5px;
+        }
+
+        .value {
+            font-weight: bold;
+        }
+
+        .player-container button {
+            background-color: white;
+            color: red;
+        }
+    </style>
 </head>
 <body>
 <div id="embed-iframe"></div>
-<div>
-    <div id="buttonContainer" class="btn-container">
-        <button id="playBtn" class="main-button">Play</button>
+<div class="main-container">
+    <div id="buttonContainer" class="button-container">
+        <button id="playBtn" class="button primary-button main-button">Play</button>
+        <button id="nextBtn" class="button secondary-button">></button>
     </div>
-
-    <div id="infoContainer" class="info-container" hidden>
-        <p>Name: <span id="nameSpan"></span></p>
-        <p>Artists: <span id="artistsSpan"></span></p>
-        <p>Release Date: <span id="releaseSpan"></span></p>
+    <div id="infoContainer" hidden>
+        <div>
+            <label class="custom-checkbox">
+                <input type="checkbox" id="songNameCheckbox"/>
+                <span class="checkmark"></span>
+                <span class="checkbox-label-text">Name: <span id="nameSpan"></span></span>
+            </label>
+        </div>
+        <div>
+            <label class="custom-checkbox">
+                <input type="checkbox" id="artistsCheckbox"/>
+                <span class="checkmark"></span>
+                <span class="checkbox-label-text">Artists: <span id="artistsSpan"></span></span>
+            </label>
+        </div>
+        <div>
+            <label class="custom-checkbox">
+                <input type="checkbox" id="releaseDateCheckbox"/>
+                <span class="checkmark"></span>
+                <span class="checkbox-label-text">Release Date: <span id="releaseSpan"></span></span>
+            </label>
+        </div>
+        <button class="button primary-button" id="confirmButton">Confirm</button>
     </div>
-<button id="nextBtn" class="secondary-button">></button>
+    <div class="players-container">
+        <div class="add-player-container">
+            <input id="add-player-input" maxlength="11" placeholder="Add new player">
+            <label for="add-player-input">
+                <button id="add-player-btn">+</button>
+            </label>
+        </div>
+    </div>
 </div>
-
 
 <script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
 <script>
+    /*
+    -- Done!
+    Add player - add to html, add to queue after last player on html display --
+    Remove player - (open confirmation dialog - confirm ->)* remove from html, remove from queue --
+
+    Flow:
+        1. Player border change color when it's their turn
+        2. Press Play -> play the song
+        3. > btn -> Current buttons disappear. Show correct values and checkbox to select correct ones.
+        4. if Player got it:
+            animation to increment value*
+        5. Move to next player on queue
+        loop
+     --
+
+    Non-priority:
+        Store song data on database
+        Backend store current game data
+        Set playlist by spotify link through html
+        Allow multiple rooms/matches to be created
+        Create sets of songs to be selected, e.g., 2000s, Classic Rock, Brazilian Funk, Top Streamed etc.
+    */
+
     let iFrameApi;
+    let players = [];
+    let currentPlayer = 0;
+
+    window.onload = (e) => {
+        document.getElementById('add-player-btn').addEventListener('click', addPlayer);
+        document.getElementById('confirmButton').addEventListener('click', finishPlayerTurn);
+    }
 
     window.onSpotifyIframeApiReady = (IFrameAPI) => {
         iFrameApi = IFrameAPI;
         start();
     };
 
-    async function start(){
+    async function start() {
         let counter = 0;
         let songs = shuffle((await getSongs()).filter(s => !s.yearReleased.includes('2025')));
         let currentSong = songs[counter];
-        console.log('loaded')
+        let cancelChange = false;
 
         const element = document.getElementById('embed-iframe');
         const options = {
@@ -108,37 +305,36 @@
         };
         const callback = (EmbedController) => {
             document.getElementById('playBtn').addEventListener('click', () => {
+                cancelChange = false;
                 EmbedController.resume();
-                togglePlayBtn();
+                togglePlayBtn(false);
                 setTimeout(() => {
-                    EmbedController.pause();
-                    document.getElementById('playBtn').innerText = "Done"
-                }, 40000);
+                    if (!cancelChange) {
+                        EmbedController.pause();
+                        document.getElementById('playBtn').innerText = "Done"
+                    }
+                }, 25000);
             });
 
             document.getElementById('nextBtn')
                 .addEventListener('click', () => {
+                    cancelChange = true;
                     document.getElementById('nameSpan').innerText = currentSong.name;
                     document.getElementById('artistsSpan').innerText = currentSong.artists.join(', ');
                     document.getElementById('releaseSpan').innerText = currentSong.yearReleased;
                     counter++;
                     currentSong = songs[counter];
-                    EmbedController.loadUri(`spotify:track:${currentSong['id']}`);
+                    EmbedController.loadUri(`spotify:track:${currentSong['id']}`, false, 30);
+                    EmbedController.pause();
                     toggleDisplayedContainer();
                 });
-
-        let infoContainer = document.getElementById('infoContainer');
-        let btnContainer = document.getElementById('buttonContainer');
-            document.getElementById('nameSpan').innerText = currentSong.name;
-            document.getElementById('artistsSpan').innerText = currentSong.artists.join(', ');
-            document.getElementById('releaseSpan').innerText = currentSong.yearReleased;
         };
         iFrameApi.createController(element, options, callback);
     }
 
-    function togglePlayBtn() {
+    function togglePlayBtn(state) {
         let playBtn = document.getElementById('playBtn');
-        playBtn.disabled = !playBtn.disabled;
+        playBtn.disabled = !state;
 
         if (playBtn.disabled) {
             playBtn.innerText = "Playing..."
@@ -147,8 +343,8 @@
         }
     }
 
-    async function getSongs(){
-        let response = await fetch('http://localhost:8000/songfy/get-songs')
+    async function getSongs() {
+        let response = await fetch('http://192.168.100.5:8000/songfy/get-songs')
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -156,21 +352,21 @@
         return await response.json();
     }
 
-    function toggleDisplayedContainer(EmbedController, currentSong, counter) {
+    function toggleDisplayedContainer() {
         let infoContainer = document.getElementById('infoContainer');
         let btnContainer = document.getElementById('buttonContainer');
 
         if (infoContainer.hidden) {
-            btnContainer.classList.remove('btn-container');
+            btnContainer.classList.remove('button-container');
             infoContainer.classList.add('info-container');
             infoContainer.hidden = false
             btnContainer.hidden = true
         } else {
-            togglePlayBtn();
+            togglePlayBtn(true);
             infoContainer.hidden = true;
             btnContainer.hidden = false;
             infoContainer.classList.remove('info-container');
-            btnContainer.classList.add('btn-container');
+            btnContainer.classList.add('button-container');
         }
     }
 
@@ -180,6 +376,80 @@
             [array[i], array[j]] = [array[j], array[i]];   // swap elements
         }
         return array;
+    }
+
+    function addPlayer() {
+        const playerNameInput = document.getElementById('add-player-input');
+        const playerName = playerNameInput.value;
+        if (playerName.length === 0) {
+            // Print error msg
+            return;
+        }
+
+        const playerElement = document.createElement('div');
+        const playerElementHtml = '<div>' +
+            `                  <span class="value">${playerName}</span>` +
+            '                  <span>has</span>' +
+            '                  <span class="value"><span class="points">0</span> points</span>' +
+            '              </div>';
+        const deleteBtn = document.createElement('button');
+        const playersContainer = document.getElementsByClassName('players-container')[0];
+        const addPlayerContainer = document.getElementsByClassName('add-player-container')[0];
+        deleteBtn.innerText = 'X';
+        deleteBtn.addEventListener('click', deletePlayer);
+
+        playerElement.classList.add('player-container');
+        playerElement.innerHTML = playerElementHtml;
+        playerElement.appendChild(deleteBtn);
+
+        playersContainer.insertBefore(playerElement, addPlayerContainer);
+
+        if (playersContainer.children.length === 2) {
+            playerElement.classList.add('current-player');
+        }
+
+        playerNameInput.value = '';
+        players.push(playerName);
+    }
+
+    function deletePlayer(event) {
+        const playerElement = event.target.parentElement;
+        const playerIndex =  Array.from(playerElement.parentElement.children).indexOf(playerElement);
+        let changeCurrentPlayer = playerElement.classList.contains('current-player');
+        playerElement.remove();
+
+        if (changeCurrentPlayer) {
+            const playersContainer = document.getElementsByClassName('players-container')[0];
+            playersContainer.children[0].classList.add('current-player');
+        }
+
+        players.splice(Number(playerIndex), 1);
+    }
+
+    function finishPlayerTurn() {
+        if (players.length === 0) {
+            toggleDisplayedContainer();
+        }
+
+        const songNameCheckbox = document.getElementById('songNameCheckbox');
+        const artistsCheckbox = document.getElementById('artistsCheckbox');
+        const releaseDateCheckbox = document.getElementById('releaseDateCheckbox');
+        const checkboxes = [songNameCheckbox, artistsCheckbox, releaseDateCheckbox];
+        const pointsToAdd = checkboxes.filter(c => c.checked).length;
+
+        const playersContainer = document.getElementsByClassName('players-container')[0];
+        const playerElement = document.getElementsByClassName('current-player')[0];
+        const playerPointsElement = playerElement.getElementsByClassName('points')[0];
+        let playerPoints = Number(playerPointsElement.innerText);
+        playerPoints += pointsToAdd;
+
+        playerPointsElement.innerText = playerPoints;
+        playerElement.classList.remove('current-player');
+        currentPlayer = currentPlayer === players.length-1 ? 0 : currentPlayer + 1;
+
+        playersContainer.children[currentPlayer].classList.add('current-player');
+        toggleDisplayedContainer();
+        checkboxes.map(c => c.checked = false);
     }
 </script>
 </body>
