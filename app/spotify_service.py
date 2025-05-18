@@ -1,6 +1,8 @@
 from os import getenv
 from spotipy import Spotify, SpotifyOAuth, SpotifyClientCredentials
 from app.song import Song
+from dotenv import load_dotenv
+load_dotenv()
 
 
 class SpotifyService:

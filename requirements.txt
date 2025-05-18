@@ -3,3 +3,4 @@ uvicorn
 pydantic
 spotipy
 jinja2
+dotenv
