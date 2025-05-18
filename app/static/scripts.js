@@ -10,7 +10,7 @@ Non-priority:
 
 const API_ADDRESS = 'https://songfy-dueae8btf4dnasbx.polandcentral-01.azurewebsites.net/'; //'http://localhost:8000'
 const params = new URLSearchParams(window.location.search);
-const playlistId = params.get("playlistId");
+const playlistId = params.get("playlistId") ?? '';
 
 let iFrameApi;
 let players = [];

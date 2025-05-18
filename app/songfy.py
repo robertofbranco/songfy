@@ -28,7 +28,7 @@ async def read_root(request: Request):
 @router.get("/get-songs")
 async def get_songs(playlistId: str = None):
     if not playlistId:
-        playlist_id = '4qdHxoedPCArR4pa2MMdAe'
+        playlistId = '4qdHxoedPCArR4pa2MMdAe'
 
     spotify_setlist_service = SpotifyService()
     return await spotify_setlist_service.get_playlist_songs(playlistId)
