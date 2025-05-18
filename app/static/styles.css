@@ -48,8 +48,8 @@ button {
 
 .title {
     color: #FEBA17;
-    font-size: 10rem;
     font-weight: bold;
+    font-size: clamp(4.5rem, 5vw, 15rem);
     margin: 2rem;
 }
 
