@@ -9,6 +9,9 @@ Non-priority:
 */
 
 const API_ADDRESS = 'https://songfy-dueae8btf4dnasbx.polandcentral-01.azurewebsites.net/'; //'http://localhost:8000'
+const params = new URLSearchParams(window.location.search);
+const playlistId = params.get("playlistId");
+
 let iFrameApi;
 let players = [];
 let currentPlayer = 0;
@@ -76,7 +79,7 @@ function togglePlayBtn(state) {
 }
 
 async function getSongs() {
-    let response = await fetch(`${API_ADDRESS}/songfy/get-songs`);
+    let response = await fetch(`${API_ADDRESS}/songfy/get-songs?playlistId=${playlistId}`);
     if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
     }
