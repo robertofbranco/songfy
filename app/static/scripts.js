@@ -39,21 +39,22 @@ async function start() {
         uri: `spotify:track:${currentSong['id']}`
     };
     const callback = (EmbedController) => {
+        let timeoutId;
         document.getElementById('playBtn').addEventListener('click', () => {
-            cancelChange = false;
             EmbedController.resume();
             togglePlayBtn(false);
-            setTimeout(() => {
-                if (!cancelChange) {
-                    EmbedController.pause();
-                    document.getElementById('playBtn').innerText = "Done"
-                }
+            timeoutId = setTimeout(() => {
+                EmbedController.pause();
+                document.getElementById('playBtn').innerText = "Done";
             }, 25000);
         });
 
         document.getElementById('nextBtn')
             .addEventListener('click', () => {
-                cancelChange = true;
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                }
+
                 document.getElementById('nameSpan').innerText = currentSong.name;
                 document.getElementById('artistsSpan').innerText = currentSong.artists.join(', ');
                 document.getElementById('releaseSpan').innerText = currentSong.yearReleased;
