@@ -94,6 +94,18 @@ button {
     font-size: clamp(1.4rem, 4vw, 2rem);
 }
 
+.result-message {
+    flex-basis: 100%;
+    margin: 0;
+    text-align: center;
+    font-weight: bold;
+    color: var(--color-primary);
+}
+
+.result-message[hidden] {
+    display: none;
+}
+
 .end-game-container {
     display: grid;
     flex-basis: min(28rem, 100%);

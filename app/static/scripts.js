@@ -36,6 +36,7 @@ let domReady = false;
 let spotifyReady = false;
 let gameStarted = false;
 let finalTurnPending = false;
+let resultMessageTimeoutId;
 
 document.addEventListener('DOMContentLoaded', () => {
     domReady = true;
@@ -365,6 +366,7 @@ function finishPlayerTurn() {
         Number(playerPointsElement.innerText) + pointsToAdd;
 
     playerPointsElement.innerText = playerPoints;
+    showResultMessage(players[currentPlayer], pointsToAdd);
 
     checkboxes.forEach(checkbox => {
         checkbox.checked = false;
@@ -395,6 +397,16 @@ function finishPlayerTurn() {
 
     toggleDisplayedContainer();
 
+}
+
+function showResultMessage(playerName, points) {
+    const resultMessage = document.getElementById('resultMessage');
+    clearTimeout(resultMessageTimeoutId);
+    resultMessage.textContent = `${playerName} earned ${points} points.`;
+    resultMessage.hidden = false;
+    resultMessageTimeoutId = setTimeout(() => {
+        resultMessage.hidden = true;
+    }, 2500);
 }
 
 function showEndGame() {
