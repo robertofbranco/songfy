@@ -30,6 +30,7 @@ const RELEASE_YEAR_POINTS =
 
 let iFrameApi;
 let currentPlayer = 0;
+let currentRound = 1;
 
 let domReady = false;
 let spotifyReady = false;
@@ -44,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     renderScoreboard();
+    renderRoundHeader();
 
     document
         .getElementById('confirmButton')
@@ -298,6 +300,12 @@ function renderScoreboard() {
     });
 }
 
+function renderRoundHeader() {
+    document.getElementById("roundHeader").textContent =
+        `Round ${currentRound} of ${NUMBER_OF_ROUNDS} — ` +
+        `${players[currentPlayer]}’s turn.`;
+}
+
 function finishPlayerTurn() {
     if (players.length === 0) {
         toggleDisplayedContainer();
@@ -347,10 +355,12 @@ function finishPlayerTurn() {
     playerPointsElement.innerText = playerPoints;
     playerElement.classList.remove('current-player');
 
-    currentPlayer =
-        currentPlayer === players.length - 1
-            ? 0
-            : currentPlayer + 1;
+    if (currentPlayer === players.length - 1) {
+        currentPlayer = 0;
+        currentRound++;
+    } else {
+        currentPlayer++;
+    }
 
     const playerElements = document.querySelectorAll(
         '.players-container > .player-container'
@@ -358,6 +368,8 @@ function finishPlayerTurn() {
 
     playerElements[currentPlayer]
         .classList.add('current-player');
+
+    renderRoundHeader();
 
     toggleDisplayedContainer();
 
