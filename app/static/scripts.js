@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderScoreboard();
     renderRoundHeader();
+    renderConfiguredPoints();
 
     document
         .getElementById('confirmButton')
@@ -300,6 +301,15 @@ function renderScoreboard() {
         playerElement.append(name, score);
         container.appendChild(playerElement);
     });
+}
+
+function renderConfiguredPoints() {
+    document.getElementById('songNamePointsLabel').textContent =
+        `(+${SONG_NAME_POINTS})`;
+    document.getElementById('artistPointsLabel').textContent =
+        `(+${ARTIST_POINTS})`;
+    document.getElementById('releaseYearPointsLabel').textContent =
+        `(+${RELEASE_YEAR_POINTS})`;
 }
 
 function renderRoundHeader() {
