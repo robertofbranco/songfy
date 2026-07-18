@@ -35,6 +35,7 @@ let currentRound = 1;
 let domReady = false;
 let spotifyReady = false;
 let gameStarted = false;
+let finalTurnPending = false;
 
 document.addEventListener('DOMContentLoaded', () => {
     domReady = true;
@@ -175,6 +176,7 @@ async function start() {
 
                 if (counter >= songs.length) {
                     gameFinished = true;
+                    finalTurnPending = true;
                     expectedSongUri = undefined;
                     togglePlayBtn(false, 'No more songs');
                     nextButton.disabled = true;
@@ -353,6 +355,16 @@ function finishPlayerTurn() {
         Number(playerPointsElement.innerText) + pointsToAdd;
 
     playerPointsElement.innerText = playerPoints;
+
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+
+    if (finalTurnPending) {
+        showEndGame();
+        return;
+    }
+
     playerElement.classList.remove('current-player');
 
     if (currentPlayer === players.length - 1) {
@@ -373,9 +385,36 @@ function finishPlayerTurn() {
 
     toggleDisplayedContainer();
 
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = false;
-    });
+}
+
+function showEndGame() {
+    const rankedPlayers = Array.from(
+        document.querySelectorAll('.player-container'),
+        (playerElement, position) => ({
+            position,
+            name: playerElement.querySelector('.value').textContent,
+            points: Number(playerElement.querySelector('.points').textContent)
+        })
+    ).sort((first, second) =>
+        second.points - first.points || first.position - second.position
+    );
+
+    const rankingsList = document.getElementById('rankingsList');
+    rankingsList.replaceChildren(...rankedPlayers.map(player => {
+        const item = document.createElement('li');
+        const name = document.createElement('span');
+        const total = document.createElement('span');
+        name.textContent = player.name;
+        total.textContent = `${player.points} points`;
+        item.append(name, total);
+        return item;
+    }));
+
+    document.getElementById('roundHeader').hidden = true;
+    document.getElementById('buttonContainer').hidden = true;
+    document.getElementById('infoContainer').hidden = true;
+    document.querySelector('.players-container').hidden = true;
+    document.getElementById('endGameContainer').hidden = false;
 }
 
 function getIntegerSetting(name, defaultValue, minimum, maximum) {
