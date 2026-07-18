@@ -11,3 +11,19 @@ Non-priority:
 const SONGS_API_PATH = '/songfy/get-songs';
 const params = new URLSearchParams(window.location.search);
 const playlistId = params.get('playlistId') ?? '';
+
+let iFrameApi;
+let players = [];
+let currentPlayer = 0;
+
+window.onload = () => {
+    document
+        .getElementById('add-player-btn')
+        .addEventListener('click', addPlayer);
+
+    document
+        .getElementById('confirmButton')
+        .addEventListener('click', finishPlayerTurn);
+};
+
+window.onSpotifyIframeApiReady =
