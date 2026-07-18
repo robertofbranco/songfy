@@ -58,14 +58,16 @@ async function start() {
         let counter = 0;
         let timeoutId;
         let expectedSongUri;
-        let songReady = false;
+        let embedReady = false;
         let waitingForPlaybackStart = false;
+        let currentSongPlayed = false;
+        let gameFinished = false;
 
-        const songs = shuffle(
-            (await getSongs()).filter(
-                song => !song.yearReleased.includes('2025')
-            )
+        const eligibleSongs = (await getSongs()).filter(
+            song => !song.yearReleased.includes('2025')
         );
+
+        const songs = shuffle(eligibleSongs);
 
         if (songs.length === 0) {
             throw new Error('No songs were returned for this playlist.');
@@ -87,25 +89,13 @@ async function start() {
             expectedSongUri = `spotify:track:${currentSong.id}`;
             togglePlayBtn(false, 'Loading...');
 
-            EmbedController.addListener(
-                'playback_update',
-                event => {
-                    const playback = event.data;
+            EmbedController.addListener('ready', () => {
+                embedReady = true;
 
-                    if (!playback) {
-                        return;
-                    }
-
-                    if (
-                        playback.playingURI === expectedSongUri &&
-                        !playback.isBuffering &&
-                        playback.duration > 0
-                    ) {
-                        songReady = true;
-                        togglePlayBtn(true);
-                    }
+                if (!gameFinished) {
+                    togglePlayBtn(true);
                 }
-            );
+            });
 
             EmbedController.addListener(
                 'playback_started',
@@ -130,13 +120,19 @@ async function start() {
             );
 
             playButton.addEventListener('click', () => {
-                if (!songReady || waitingForPlaybackStart) {
+                if (
+                    !embedReady ||
+                    waitingForPlaybackStart ||
+                    currentSongPlayed ||
+                    gameFinished
+                ) {
                     return;
                 }
 
                 clearPlaybackTimeout();
 
                 waitingForPlaybackStart = true;
+                currentSongPlayed = true;
                 togglePlayBtn(false, 'Playing...');
 
                 EmbedController.play();
@@ -161,14 +157,17 @@ async function start() {
                 counter++;
 
                 if (counter >= songs.length) {
-                    counter = 0;
-                    shuffle(songs);
+                    gameFinished = true;
+                    expectedSongUri = undefined;
+                    togglePlayBtn(false, 'No more songs');
+                    nextButton.disabled = true;
+                    toggleDisplayedContainer();
+                    return;
                 }
 
                 currentSong = songs[counter];
                 expectedSongUri = `spotify:track:${currentSong.id}`;
-                songReady = false;
-
+                currentSongPlayed = false;
                 togglePlayBtn(false, 'Loading...');
 
                 EmbedController.loadEntity(
@@ -176,6 +175,10 @@ async function start() {
                     false,
                     30
                 );
+
+                // The controller stays ready while switching entities. Spotify
+                // will finish loading/buffering after the user starts playback.
+                togglePlayBtn(true);
 
                 toggleDisplayedContainer();
             });
