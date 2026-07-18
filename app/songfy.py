@@ -15,14 +15,19 @@ templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/")
 async def read_root(request: Request):
-    response = templates.TemplateResponse("index.html", {"request": request})
-    return response
-
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html",
+        context={},
+    )
 
 @router.get("/game")
 async def read_root(request: Request):
-    response = templates.TemplateResponse("game.html", {"request": request})
-    return response
+    return templates.TemplateResponse(
+        request=request,
+        name="game.html",
+        context={},
+    )
 
 
 @router.get("/get-songs")
