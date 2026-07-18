@@ -60,12 +60,14 @@ async function start() {
         let expectedSongUri;
         let embedReady = false;
         let waitingForPlaybackStart = false;
+        let currentSongPlayed = false;
+        let gameFinished = false;
 
-        const songs = shuffle(
-            (await getSongs()).filter(
-                song => !song.yearReleased.includes('2025')
-            )
+        const eligibleSongs = (await getSongs()).filter(
+            song => !song.yearReleased.includes('2025')
         );
+
+        const songs = shuffle(eligibleSongs);
 
         if (songs.length === 0) {
             throw new Error('No songs were returned for this playlist.');
@@ -89,7 +91,10 @@ async function start() {
 
             EmbedController.addListener('ready', () => {
                 embedReady = true;
-                togglePlayBtn(true);
+
+                if (!gameFinished) {
+                    togglePlayBtn(true);
+                }
             });
 
             EmbedController.addListener(
@@ -115,13 +120,19 @@ async function start() {
             );
 
             playButton.addEventListener('click', () => {
-                if (!embedReady || waitingForPlaybackStart) {
+                if (
+                    !embedReady ||
+                    waitingForPlaybackStart ||
+                    currentSongPlayed ||
+                    gameFinished
+                ) {
                     return;
                 }
 
                 clearPlaybackTimeout();
 
                 waitingForPlaybackStart = true;
+                currentSongPlayed = true;
                 togglePlayBtn(false, 'Playing...');
 
                 EmbedController.play();
@@ -146,12 +157,17 @@ async function start() {
                 counter++;
 
                 if (counter >= songs.length) {
-                    counter = 0;
-                    shuffle(songs);
+                    gameFinished = true;
+                    expectedSongUri = undefined;
+                    togglePlayBtn(false, 'No more songs');
+                    nextButton.disabled = true;
+                    toggleDisplayedContainer();
+                    return;
                 }
 
                 currentSong = songs[counter];
                 expectedSongUri = `spotify:track:${currentSong.id}`;
+                currentSongPlayed = false;
                 togglePlayBtn(false, 'Loading...');
 
                 EmbedController.loadEntity(
