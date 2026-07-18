@@ -1,25 +1,30 @@
 /*
 Non-priority:
-    Set playlist by spotify link through html
+    Set playlist by Spotify link through HTML
     Store in DB sets of songs to be selected, e.g., 2000s, Classic Rock, Brazilian Funk, Top Streamed etc.
     Backend store current game data
-    Confirmation dialog bf removing player
+    Confirmation dialog before removing player
     Animation to increment points?
     Allow multiple rooms/matches to be created
 */
 
-const API_ADDRESS = 'https://songfy-dueae8btf4dnasbx.polandcentral-01.azurewebsites.net/'; //'http://localhost:8000'
+const SONGS_API_PATH = '/songfy/get-songs';
 const params = new URLSearchParams(window.location.search);
-const playlistId = params.get("playlistId") ?? '';
+const playlistId = params.get('playlistId') ?? '';
 
 let iFrameApi;
 let players = [];
 let currentPlayer = 0;
 
-window.onload = (e) => {
-    document.getElementById('add-player-btn').addEventListener('click', addPlayer);
-    document.getElementById('confirmButton').addEventListener('click', finishPlayerTurn);
-}
+window.onload = () => {
+    document
+        .getElementById('add-player-btn')
+        .addEventListener('click', addPlayer);
+
+    document
+        .getElementById('confirmButton')
+        .addEventListener('click', finishPlayerTurn);
+};
 
 window.onSpotifyIframeApiReady = (IFrameAPI) => {
     iFrameApi = IFrameAPI;
@@ -27,80 +32,145 @@ window.onSpotifyIframeApiReady = (IFrameAPI) => {
 };
 
 async function start() {
-    let counter = 0;
-    let songs = shuffle((await getSongs()).filter(s => !s.yearReleased.includes('2025')));
-    let currentSong = songs[counter];
-    let cancelChange = false;
+    try {
+        let counter = 0;
 
-    const element = document.getElementById('embed-iframe');
-    const options = {
-        width: '0',
-        height: '0',
-        uri: `spotify:track:${currentSong['id']}`
-    };
-    const callback = (EmbedController) => {
-        let timeoutId;
-        document.getElementById('playBtn').addEventListener('click', () => {
-            EmbedController.resume();
-            togglePlayBtn(false);
-            timeoutId = setTimeout(() => {
-                EmbedController.pause();
-                document.getElementById('playBtn').innerText = "Done";
-            }, 25000);
-        });
+        const songs = shuffle(
+            (await getSongs()).filter(
+                song => !song.yearReleased.includes('2025')
+            )
+        );
 
-        document.getElementById('nextBtn')
-            .addEventListener('click', () => {
-                if (timeoutId) {
-                    clearTimeout(timeoutId);
-                }
+        if (songs.length === 0) {
+            throw new Error('No songs were returned for this playlist.');
+        }
 
-                document.getElementById('nameSpan').innerText = currentSong.name;
-                document.getElementById('artistsSpan').innerText = currentSong.artists.join(', ');
-                document.getElementById('releaseSpan').innerText = currentSong.yearReleased;
-                counter++;
-                currentSong = songs[counter];
-                EmbedController.loadUri(`spotify:track:${currentSong['id']}`, false, 30);
-                EmbedController.pause();
-                toggleDisplayedContainer();
-            });
-    };
-    iFrameApi.createController(element, options, callback);
+        let currentSong = songs[counter];
+
+        const element = document.getElementById('embed-iframe');
+        const options = {
+            width: '0',
+            height: '0',
+            uri: `spotify:track:${currentSong.id}`
+        };
+
+        const callback = (EmbedController) => {
+            let timeoutId;
+
+            document
+                .getElementById('playBtn')
+                .addEventListener('click', () => {
+                    EmbedController.resume();
+                    togglePlayBtn(false);
+
+                    timeoutId = setTimeout(() => {
+                        EmbedController.pause();
+                        document.getElementById('playBtn').innerText = 'Done';
+                    }, 25000);
+                });
+
+            document
+                .getElementById('nextBtn')
+                .addEventListener('click', () => {
+                    if (timeoutId) {
+                        clearTimeout(timeoutId);
+                        timeoutId = undefined;
+                    }
+
+                    document.getElementById('nameSpan').innerText =
+                        currentSong.name;
+
+                    document.getElementById('artistsSpan').innerText =
+                        currentSong.artists.join(', ');
+
+                    document.getElementById('releaseSpan').innerText =
+                        currentSong.yearReleased;
+
+                    counter++;
+
+                    if (counter >= songs.length) {
+                        counter = 0;
+                        shuffle(songs);
+                    }
+
+                    currentSong = songs[counter];
+
+                    EmbedController.loadUri(
+                        `spotify:track:${currentSong.id}`,
+                        false,
+                        30
+                    );
+
+                    EmbedController.pause();
+                    toggleDisplayedContainer();
+                });
+        };
+
+        iFrameApi.createController(element, options, callback);
+    } catch (error) {
+        console.error('Failed to start the game:', error);
+
+        const playButton = document.getElementById('playBtn');
+
+        if (playButton) {
+            playButton.disabled = true;
+            playButton.innerText = 'Unable to load songs';
+        }
+    }
 }
 
 function togglePlayBtn(state) {
-    let playBtn = document.getElementById('playBtn');
+    const playBtn = document.getElementById('playBtn');
     playBtn.disabled = !state;
 
     if (playBtn.disabled) {
-        playBtn.innerText = "Playing..."
+        playBtn.innerText = 'Playing...';
     } else {
-        playBtn.innerText = "Play"
+        playBtn.innerText = 'Play';
     }
 }
 
 async function getSongs() {
-    let response = await fetch(`${API_ADDRESS}/songfy/get-songs?playlistId=${playlistId}`);
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+    const url = new URL(SONGS_API_PATH, window.location.origin);
+
+    if (playlistId) {
+        url.searchParams.set('playlistId', playlistId);
     }
 
-    return await response.json();
+    const response = await fetch(url, {
+        headers: {
+            Accept: 'application/json'
+        }
+    });
+
+    if (!response.ok) {
+        const responseBody = await response.text();
+
+        throw new Error(
+            `Failed to load songs: ${response.status} ` +
+            `${response.statusText}. ${responseBody}`
+        );
+    }
+
+    return response.json();
 }
 
 function toggleDisplayedContainer() {
-    let infoContainer = document.getElementById('infoContainer');
-    let btnContainer = document.getElementById('buttonContainer');
+    const infoContainer = document.getElementById('infoContainer');
+    const btnContainer = document.getElementById('buttonContainer');
 
     if (infoContainer.hidden) {
         btnContainer.classList.remove('button-container');
         infoContainer.classList.add('info-container');
-        infoContainer.hidden = false
-        btnContainer.hidden = true
+
+        infoContainer.hidden = false;
+        btnContainer.hidden = true;
     } else {
         togglePlayBtn(true);
+
         infoContainer.hidden = true;
         btnContainer.hidden = false;
+
         infoContainer.classList.remove('info-container');
         btnContainer.classList.add('button-container');
     }
@@ -108,30 +178,41 @@ function toggleDisplayedContainer() {
 
 function shuffle(array) {
     for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1)); // random index from 0 to i
-        [array[i], array[j]] = [array[j], array[i]];   // swap elements
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
     }
+
     return array;
 }
 
 function addPlayer() {
     const playerNameInput = document.getElementById('add-player-input');
-    const playerName = playerNameInput.value;
+    const playerName = playerNameInput.value.trim();
+
     if (playerName.length === 0) {
-        // Print error msg
         return;
     }
 
     const playerElement = document.createElement('div');
-    const playerElementHtml = '<div>' +
-        `                  <span class="value">${playerName}</span>` +
-        '                  <span>has</span>' +
-        '                  <span class="value"><span class="points">0</span> points</span>' +
-        '              </div>';
+    const playerElementHtml = `
+        <div>
+            <span class="value">${escapeHtml(playerName)}</span>
+            <span>has</span>
+            <span class="value">
+                <span class="points">0</span> points
+            </span>
+        </div>
+    `;
+
     const deleteBtn = document.createElement('button');
-    const playersContainer = document.getElementsByClassName('players-container')[0];
-    const addPlayerContainer = document.getElementsByClassName('add-player-container')[0];
+    const playersContainer =
+        document.getElementsByClassName('players-container')[0];
+
+    const addPlayerContainer =
+        document.getElementsByClassName('add-player-container')[0];
+
     deleteBtn.innerText = 'X';
+    deleteBtn.type = 'button';
     deleteBtn.addEventListener('click', deletePlayer);
 
     playerElement.classList.add('player-container');
@@ -140,50 +221,120 @@ function addPlayer() {
 
     playersContainer.insertBefore(playerElement, addPlayerContainer);
 
-    if (playersContainer.children.length === 2) {
+    if (players.length === 0) {
         playerElement.classList.add('current-player');
     }
 
-    playerNameInput.value = '';
     players.push(playerName);
+    playerNameInput.value = '';
 }
 
 function deletePlayer(event) {
-    const playerElement = event.target.parentElement;
-    const playerIndex = Array.from(playerElement.parentElement.children).indexOf(playerElement);
-    let changeCurrentPlayer = playerElement.classList.contains('current-player');
-    playerElement.remove();
+    const playerElement = event.target.closest('.player-container');
 
-    if (changeCurrentPlayer) {
-        const playersContainer = document.getElementsByClassName('players-container')[0];
-        playersContainer.children[0].classList.add('current-player');
+    if (!playerElement) {
+        return;
     }
 
-    players.splice(Number(playerIndex), 1);
+    const playerElements = Array.from(
+        document.querySelectorAll(
+            '.players-container > .player-container'
+        )
+    );
+
+    const playerIndex = playerElements.indexOf(playerElement);
+
+    if (playerIndex === -1) {
+        return;
+    }
+
+    const wasCurrentPlayer =
+        playerElement.classList.contains('current-player');
+
+    playerElement.remove();
+    players.splice(playerIndex, 1);
+
+    if (players.length === 0) {
+        currentPlayer = 0;
+        return;
+    }
+
+    if (playerIndex < currentPlayer) {
+        currentPlayer--;
+    } else if (currentPlayer >= players.length) {
+        currentPlayer = 0;
+    }
+
+    if (wasCurrentPlayer) {
+        const remainingPlayerElements = document.querySelectorAll(
+            '.players-container > .player-container'
+        );
+
+        remainingPlayerElements[currentPlayer]
+            .classList.add('current-player');
+    }
 }
 
 function finishPlayerTurn() {
     if (players.length === 0) {
         toggleDisplayedContainer();
+        return;
     }
 
-    const songNameCheckbox = document.getElementById('songNameCheckbox');
-    const artistsCheckbox = document.getElementById('artistsCheckbox');
-    const releaseDateCheckbox = document.getElementById('releaseDateCheckbox');
-    const checkboxes = [songNameCheckbox, artistsCheckbox, releaseDateCheckbox];
-    const pointsToAdd = checkboxes.filter(c => c.checked).length;
+    const songNameCheckbox =
+        document.getElementById('songNameCheckbox');
 
-    const playersContainer = document.getElementsByClassName('players-container')[0];
-    const playerElement = document.getElementsByClassName('current-player')[0];
-    const playerPointsElement = playerElement.getElementsByClassName('points')[0];
-    let playerPoints = Number(playerPointsElement.innerText);
-    playerPoints += pointsToAdd;
+    const artistsCheckbox =
+        document.getElementById('artistsCheckbox');
+
+    const releaseDateCheckbox =
+        document.getElementById('releaseDateCheckbox');
+
+    const checkboxes = [
+        songNameCheckbox,
+        artistsCheckbox,
+        releaseDateCheckbox
+    ];
+
+    const pointsToAdd =
+        checkboxes.filter(checkbox => checkbox.checked).length;
+
+    const playerElement =
+        document.getElementsByClassName('current-player')[0];
+
+    if (!playerElement) {
+        return;
+    }
+
+    const playerPointsElement =
+        playerElement.getElementsByClassName('points')[0];
+
+    const playerPoints =
+        Number(playerPointsElement.innerText) + pointsToAdd;
 
     playerPointsElement.innerText = playerPoints;
     playerElement.classList.remove('current-player');
-    currentPlayer = currentPlayer === players.length - 1 ? 0 : currentPlayer + 1;
 
-    playersContainer.children[currentPlayer].classList.add('current-player');
+    currentPlayer =
+        currentPlayer === players.length - 1
+            ? 0
+            : currentPlayer + 1;
+
+    const playerElements = document.querySelectorAll(
+        '.players-container > .player-container'
+    );
+
+    playerElements[currentPlayer].classList.add('current-player');
+
     toggleDisplayedContainer();
-    checkboxes.map(c => c.checked = false);
+
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+}
+
+function escapeHtml(value) {
+    const element = document.createElement('div');
+    element.textContent = value;
+    return element.innerHTML;
 }
