@@ -12,6 +12,25 @@
         <p>Insert the link to a Spotify's playlist to play with its songs
             or leave it empty to use default set</p>
         <input id="playlist-input" placeholder="Insert Spotify's playlist link here">
+        <fieldset class="settings-container">
+            <legend>Game settings</legend>
+            <label for="song-duration-input">
+                Song duration (seconds)
+                <input id="song-duration-input" type="number" min="1" max="300" value="25">
+            </label>
+            <label for="song-name-points-input">
+                Points for song name
+                <input id="song-name-points-input" type="number" min="0" max="100" value="1">
+            </label>
+            <label for="artist-points-input">
+                Points for artist
+                <input id="artist-points-input" type="number" min="0" max="100" value="1">
+            </label>
+            <label for="release-year-points-input">
+                Points for release year
+                <input id="release-year-points-input" type="number" min="0" max="100" value="1">
+            </label>
+        </fieldset>
         <label for="playlist-input">
             <button id="start-game-btn" class="primary-button">
                 Start Game

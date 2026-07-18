@@ -116,6 +116,32 @@ button {
     text-align: center;
 }
 
+.settings-container {
+    display: grid;
+    gap: 0.75rem;
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    background-color: var(--color-surface);
+}
+
+.settings-container legend {
+    padding: 0 0.5rem;
+    color: var(--color-primary-dark);
+    font-weight: bold;
+}
+
+.settings-container label {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 5rem;
+    gap: 1rem;
+    align-items: center;
+}
+
+.settings-container input {
+    text-align: right;
+}
+
 .info-container {
     display: flex;
     flex-direction: column;

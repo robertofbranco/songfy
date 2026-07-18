@@ -10,10 +10,21 @@ Non-priority:
 */
 
 const SONGS_API_PATH = '/songfy/get-songs';
-const SONG_PLAYBACK_DURATION_MS = 25_000;
 
 const params = new URLSearchParams(window.location.search);
 const playlistId = params.get('playlistId') ?? '';
+
+const SONG_PLAYBACK_DURATION_MS =
+    getIntegerSetting('songDurationSeconds', 25, 1, 300) * 1_000;
+
+const SONG_NAME_POINTS =
+    getIntegerSetting('songNamePoints', 1, 0, 100);
+
+const ARTIST_POINTS =
+    getIntegerSetting('artistPoints', 1, 0, 100);
+
+const RELEASE_YEAR_POINTS =
+    getIntegerSetting('releaseYearPoints', 1, 0, 100);
 
 let iFrameApi;
 let players = [];
@@ -383,8 +394,17 @@ function finishPlayerTurn() {
         releaseDateCheckbox
     ];
 
-    const pointsToAdd =
-        checkboxes.filter(checkbox => checkbox.checked).length;
+    const pointValues = [
+        SONG_NAME_POINTS,
+        ARTIST_POINTS,
+        RELEASE_YEAR_POINTS
+    ];
+
+    const pointsToAdd = checkboxes.reduce(
+        (total, checkbox, index) =>
+            total + (checkbox.checked ? pointValues[index] : 0),
+        0
+    );
 
     const playerElement =
         document.getElementsByClassName('current-player')[0];
@@ -419,6 +439,26 @@ function finishPlayerTurn() {
     checkboxes.forEach(checkbox => {
         checkbox.checked = false;
     });
+}
+
+function getIntegerSetting(name, defaultValue, minimum, maximum) {
+    const rawValue = params.get(name);
+
+    if (rawValue === null || rawValue.trim() === '') {
+        return defaultValue;
+    }
+
+    const value = Number(rawValue);
+
+    if (
+        !Number.isInteger(value) ||
+        value < minimum ||
+        value > maximum
+    ) {
+        return defaultValue;
+    }
+
+    return value;
 }
 
 function escapeHtml(value) {
