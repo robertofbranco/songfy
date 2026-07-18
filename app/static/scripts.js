@@ -1,7 +1,8 @@
 /*
 Non-priority:
     Set playlist by Spotify link through HTML
-    Store in DB sets of songs to be selected, e.g., 2000s, Classic Rock, Brazilian Funk, Top Streamed etc.
+    Store in DB sets of songs to be selected, e.g., 2000s, Classic Rock,
+    Brazilian Funk, Top Streamed etc.
     Backend store current game data
     Confirmation dialog before removing player
     Animation to increment points?
@@ -9,6 +10,8 @@ Non-priority:
 */
 
 const SONGS_API_PATH = '/songfy/get-songs';
+const SONG_PLAYBACK_DURATION_MS = 25_000;
+
 const params = new URLSearchParams(window.location.search);
 const playlistId = params.get('playlistId') ?? '';
 
@@ -16,7 +19,13 @@ let iFrameApi;
 let players = [];
 let currentPlayer = 0;
 
-window.onload = () => {
+let domReady = false;
+let spotifyReady = false;
+let gameStarted = false;
+
+document.addEventListener('DOMContentLoaded', () => {
+    domReady = true;
+
     document
         .getElementById('add-player-btn')
         .addEventListener('click', addPlayer);
@@ -24,12 +33,25 @@ window.onload = () => {
     document
         .getElementById('confirmButton')
         .addEventListener('click', finishPlayerTurn);
+
+    tryStart();
+});
+
+window.onSpotifyIframeApiReady = IFrameAPI => {
+    iFrameApi = IFrameAPI;
+    spotifyReady = true;
+
+    tryStart();
 };
 
-window.onSpotifyIframeApiReady = (IFrameAPI) => {
-    iFrameApi = IFrameAPI;
+function tryStart() {
+    if (!domReady || !spotifyReady || gameStarted) {
+        return;
+    }
+
+    gameStarted = true;
     start();
-};
+}
 
 async function start() {
     try {
@@ -37,6 +59,7 @@ async function start() {
         let timeoutId;
         let expectedSongUri;
         let songReady = false;
+        let waitingForPlaybackStart = false;
 
         const songs = shuffle(
             (await getSongs()).filter(
@@ -57,53 +80,73 @@ async function start() {
             uri: `spotify:track:${currentSong.id}`
         };
 
-        const callback = (EmbedController) => {
+        const callback = EmbedController => {
             const playButton = document.getElementById('playBtn');
             const nextButton = document.getElementById('nextBtn');
 
             expectedSongUri = `spotify:track:${currentSong.id}`;
             togglePlayBtn(false, 'Loading...');
 
-            EmbedController.addListener('playback_update', event => {
-                const playback = event.data;
+            EmbedController.addListener(
+                'playback_update',
+                event => {
+                    const playback = event.data;
 
-                if (!playback) {
-                    return;
-                }
-
-                if (
-                    playback.playingURI === expectedSongUri &&
-                    !playback.isBuffering &&
-                    playback.duration > 0
-                ) {
-                    songReady = true;
+                    if (!playback) {
+                        return;
+                    }
 
                     if (
-                        !document.getElementById('buttonContainer').hidden
+                        playback.playingURI === expectedSongUri &&
+                        !playback.isBuffering &&
+                        playback.duration > 0
                     ) {
+                        songReady = true;
                         togglePlayBtn(true);
                     }
                 }
-            });
+            );
+
+            EmbedController.addListener(
+                'playback_started',
+                event => {
+                    const playback = event.data;
+
+                    if (
+                        !waitingForPlaybackStart ||
+                        playback?.playingURI !== expectedSongUri
+                    ) {
+                        return;
+                    }
+
+                    waitingForPlaybackStart = false;
+                    clearPlaybackTimeout();
+
+                    timeoutId = setTimeout(() => {
+                        EmbedController.pause();
+                        playButton.innerText = 'Done';
+                    }, SONG_PLAYBACK_DURATION_MS);
+                }
+            );
 
             playButton.addEventListener('click', () => {
-                if (!songReady) {
+                if (!songReady || waitingForPlaybackStart) {
                     return;
                 }
 
                 clearPlaybackTimeout();
+
+                waitingForPlaybackStart = true;
                 togglePlayBtn(false, 'Playing...');
 
                 EmbedController.play();
-
-                timeoutId = setTimeout(() => {
-                    EmbedController.pause();
-                    playButton.innerText = 'Done';
-                }, 25000);
             });
 
             nextButton.addEventListener('click', () => {
                 clearPlaybackTimeout();
+
+                waitingForPlaybackStart = false;
+
                 EmbedController.pause();
 
                 document.getElementById('nameSpan').innerText =
@@ -219,7 +262,9 @@ function shuffle(array) {
 }
 
 function addPlayer() {
-    const playerNameInput = document.getElementById('add-player-input');
+    const playerNameInput =
+        document.getElementById('add-player-input');
+
     const playerName = playerNameInput.value.trim();
 
     if (playerName.length === 0) {
@@ -238,6 +283,7 @@ function addPlayer() {
     `;
 
     const deleteBtn = document.createElement('button');
+
     const playersContainer =
         document.getElementsByClassName('players-container')[0];
 
@@ -252,7 +298,10 @@ function addPlayer() {
     playerElement.innerHTML = playerElementHtml;
     playerElement.appendChild(deleteBtn);
 
-    playersContainer.insertBefore(playerElement, addPlayerContainer);
+    playersContainer.insertBefore(
+        playerElement,
+        addPlayerContainer
+    );
 
     if (players.length === 0) {
         playerElement.classList.add('current-player');
@@ -263,7 +312,8 @@ function addPlayer() {
 }
 
 function deletePlayer(event) {
-    const playerElement = event.target.closest('.player-container');
+    const playerElement =
+        event.target.closest('.player-container');
 
     if (!playerElement) {
         return;
@@ -299,9 +349,10 @@ function deletePlayer(event) {
     }
 
     if (wasCurrentPlayer) {
-        const remainingPlayerElements = document.querySelectorAll(
-            '.players-container > .player-container'
-        );
+        const remainingPlayerElements =
+            document.querySelectorAll(
+                '.players-container > .player-container'
+            );
 
         remainingPlayerElements[currentPlayer]
             .classList.add('current-player');
@@ -357,7 +408,8 @@ function finishPlayerTurn() {
         '.players-container > .player-container'
     );
 
-    playerElements[currentPlayer].classList.add('current-player');
+    playerElements[currentPlayer]
+        .classList.add('current-player');
 
     toggleDisplayedContainer();
 
@@ -368,6 +420,8 @@ function finishPlayerTurn() {
 
 function escapeHtml(value) {
     const element = document.createElement('div');
+
     element.textContent = value;
+
     return element.innerHTML;
 }
