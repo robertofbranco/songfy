@@ -1,7 +1,22 @@
+:root {
+    --color-background: #F8F4E1;
+    --color-surface: #FFFDF5;
+    --color-primary: #74512D;
+    --color-primary-dark: #4E1F00;
+    --color-accent: #FEBA17;
+    --color-text: #3B2A1A;
+    --color-border: #C8B89F;
+    --color-disabled: #D8CEBD;
+    --color-disabled-text: #6F6559;
+    --color-danger: #A33A2B;
+    --color-shadow: rgba(78, 31, 0, 0.14);
+}
+
 body {
     display: flex;
-    background: #F8F4E1;
+    background: var(--color-background);
     font-family: sans-serif;
+    color: var(--color-text);
     justify-content: center;
 }
 
@@ -47,7 +62,7 @@ button {
 }
 
 .title {
-    color: #FEBA17;
+    color: var(--color-accent);
     font-weight: bold;
     font-size: clamp(4.5rem, 5vw, 15rem);
     margin: 2rem;
@@ -82,7 +97,7 @@ button {
 .playlist-container input {
     padding: 0.5rem 1rem;
     font-size: 1rem;
-    border: 1px solid #ccc;
+    border: 1px solid var(--color-border);
     border-radius: 0.5rem;
     outline: none;
     width: 100%;
@@ -122,8 +137,8 @@ button {
     border: none;
 }
 
-.custom-checkbox:hover {
-    border-color: #888;
+.custom-checkbox:hover .checkbox-label-text {
+    border-color: var(--color-primary);
 }
 
 .custom-checkbox input {
@@ -131,8 +146,8 @@ button {
 }
 
 .custom-checkbox input:checked + .checkbox-label-text {
-    background-color: #e0f0ff;
-    border-color: green;
+    background-color: var(--color-background);
+    border-color: var(--color-accent);
 }
 
 .checkbox-label-text {
@@ -141,9 +156,9 @@ button {
     min-height: 40px;
     display: flex;
     align-items: center;
-    background-color: #f9f9f9;
+    background-color: var(--color-surface);
     gap: 5px;
-    border: 2px solid #ccc;
+    border: 2px solid var(--color-border);
     border-radius: 6px;
     cursor: pointer;
     user-select: none;
@@ -161,14 +176,14 @@ button {
     flex: 1;
     padding: 0.5rem 1rem;
     font-size: 1rem;
-    border: 1px solid #ccc;
+    border: 1px solid var(--color-border);
     border-right: none;
     border-radius: 0.5rem 0 0 0.5rem;
     outline: none;
 }
 
 .add-player-container button:hover {
-    background-color: #0056b3;
+    background-color: var(--color-primary-dark);
 }
 
 .players-container {
@@ -181,9 +196,9 @@ button {
 .players-container button {
     padding: 0.5rem 1rem;
     font-size: 1rem;
-    border: 1px solid #ccc;
-    background-color: #007bff;
-    color: white;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-primary);
+    color: var(--color-surface);
     border-radius: 0 0.5rem 0.5rem 0;
     cursor: pointer;
     transition: background-color 0.2s ease;
@@ -196,7 +211,7 @@ button {
 }
 
 .current-player div {
-    color: #007bff;
+    color: var(--color-primary);
 }
 
 .player-container div {
@@ -204,7 +219,7 @@ button {
     flex: 1;
     justify-content: space-between;
     padding: 0.5rem 1rem;
-    border: 1px solid #ccc;
+    border: 1px solid var(--color-border);
     border-right: none;
     border-radius: 0.5rem 0 0 0.5rem;
     outline: none;
@@ -216,8 +231,8 @@ button {
 }
 
 .player-container button {
-    background-color: white;
-    color: red;
+    background-color: var(--color-surface);
+    color: var(--color-danger);
 }
 
 /* Button */
@@ -232,35 +247,35 @@ button {
 }
 
 button:disabled {
-    background-color: #ccc;
-    color: #666;
+    background-color: var(--color-disabled);
+    color: var(--color-disabled-text);
     cursor: not-allowed;
     opacity: 0.7;
     box-shadow: none;
 }
 
 .primary-button {
-    background-color: #74512D;
+    background-color: var(--color-primary);
     padding: 0.5rem 1rem;
-    color: #F8F4E1;
+    color: var(--color-background);
     font-size: 1.5rem;
     border: none;
     border-radius: 20px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 10px var(--color-shadow);
     transition: background-color 0.3s;
 }
 
 .secondary-button {
-    background-color: #4E1F00;
-    color: #F8F4E1;
+    background-color: var(--color-primary-dark);
+    color: var(--color-background);
     font-size: 1.5rem;
     border: none;
     border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 6px var(--color-shadow);
     transition: background-color 0.3s;
 }
 
 button:not(:disabled):hover {
-    color: #4E1F00;
-    background-color: #FEBA17;
+    color: var(--color-primary-dark);
+    background-color: var(--color-accent);
 }
