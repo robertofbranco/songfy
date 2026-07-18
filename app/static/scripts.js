@@ -30,10 +30,13 @@ const RELEASE_YEAR_POINTS =
 
 let iFrameApi;
 let currentPlayer = 0;
+let currentRound = 1;
 
 let domReady = false;
 let spotifyReady = false;
 let gameStarted = false;
+let finalTurnPending = false;
+let resultMessageTimeoutId;
 
 document.addEventListener('DOMContentLoaded', () => {
     domReady = true;
@@ -44,6 +47,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     renderScoreboard();
+    renderRoundHeader();
+    renderConfiguredPoints();
 
     document
         .getElementById('confirmButton')
@@ -173,6 +178,7 @@ async function start() {
 
                 if (counter >= songs.length) {
                     gameFinished = true;
+                    finalTurnPending = true;
                     expectedSongUri = undefined;
                     togglePlayBtn(false, 'No more songs');
                     nextButton.disabled = true;
@@ -298,6 +304,21 @@ function renderScoreboard() {
     });
 }
 
+function renderConfiguredPoints() {
+    document.getElementById('songNamePointsLabel').textContent =
+        `(+${SONG_NAME_POINTS})`;
+    document.getElementById('artistPointsLabel').textContent =
+        `(+${ARTIST_POINTS})`;
+    document.getElementById('releaseYearPointsLabel').textContent =
+        `(+${RELEASE_YEAR_POINTS})`;
+}
+
+function renderRoundHeader() {
+    document.getElementById("roundHeader").textContent =
+        `Round ${currentRound} of ${NUMBER_OF_ROUNDS} — ` +
+        `${players[currentPlayer]}’s turn.`;
+}
+
 function finishPlayerTurn() {
     if (players.length === 0) {
         toggleDisplayedContainer();
@@ -345,12 +366,25 @@ function finishPlayerTurn() {
         Number(playerPointsElement.innerText) + pointsToAdd;
 
     playerPointsElement.innerText = playerPoints;
+    showResultMessage(players[currentPlayer], pointsToAdd);
+
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+
+    if (finalTurnPending) {
+        showEndGame();
+        return;
+    }
+
     playerElement.classList.remove('current-player');
 
-    currentPlayer =
-        currentPlayer === players.length - 1
-            ? 0
-            : currentPlayer + 1;
+    if (currentPlayer === players.length - 1) {
+        currentPlayer = 0;
+        currentRound++;
+    } else {
+        currentPlayer++;
+    }
 
     const playerElements = document.querySelectorAll(
         '.players-container > .player-container'
@@ -359,11 +393,50 @@ function finishPlayerTurn() {
     playerElements[currentPlayer]
         .classList.add('current-player');
 
+    renderRoundHeader();
+
     toggleDisplayedContainer();
 
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = false;
-    });
+}
+
+function showResultMessage(playerName, points) {
+    const resultMessage = document.getElementById('resultMessage');
+    clearTimeout(resultMessageTimeoutId);
+    resultMessage.textContent = `${playerName} earned ${points} points.`;
+    resultMessage.hidden = false;
+    resultMessageTimeoutId = setTimeout(() => {
+        resultMessage.hidden = true;
+    }, 2500);
+}
+
+function showEndGame() {
+    const rankedPlayers = Array.from(
+        document.querySelectorAll('.player-container'),
+        (playerElement, position) => ({
+            position,
+            name: playerElement.querySelector('.value').textContent,
+            points: Number(playerElement.querySelector('.points').textContent)
+        })
+    ).sort((first, second) =>
+        second.points - first.points || first.position - second.position
+    );
+
+    const rankingsList = document.getElementById('rankingsList');
+    rankingsList.replaceChildren(...rankedPlayers.map(player => {
+        const item = document.createElement('li');
+        const name = document.createElement('span');
+        const total = document.createElement('span');
+        name.textContent = player.name;
+        total.textContent = `${player.points} points`;
+        item.append(name, total);
+        return item;
+    }));
+
+    document.getElementById('roundHeader').hidden = true;
+    document.getElementById('buttonContainer').hidden = true;
+    document.getElementById('infoContainer').hidden = true;
+    document.querySelector('.players-container').hidden = true;
+    document.getElementById('endGameContainer').hidden = false;
 }
 
 function getIntegerSetting(name, defaultValue, minimum, maximum) {

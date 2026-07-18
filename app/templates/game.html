@@ -9,32 +9,39 @@
 <body>
 <div id="embed-iframe"></div>
 <div id="gameContainer" class="game-container">
+    <h1 id="roundHeader" class="round-header"></h1>
+    <p id="resultMessage" class="result-message" role="status" aria-live="polite" hidden></p>
     <div id="buttonContainer" class="button-container">
         <button id="playBtn" class="primary-button main-button">Play</button>
-        <button id="nextBtn" class="secondary-button next-button">></button>
+        <button id="nextBtn" class="secondary-button next-button">Reveal answer</button>
     </div>
     <div id="infoContainer" hidden>
         <div>
             <label class="custom-checkbox">
                 <input type="checkbox" id="songNameCheckbox"/>
-                <span class="checkbox-label-text checkmark">Name: <span id="nameSpan"></span></span>
+                <span class="checkbox-label-text checkmark">Song name <span id="songNamePointsLabel"></span>: <span id="nameSpan"></span></span>
             </label>
         </div>
         <div>
             <label class="custom-checkbox">
                 <input type="checkbox" id="artistsCheckbox"/>
-                <span class="checkbox-label-text checkmark">Artists: <span id="artistsSpan"></span></span>
+                <span class="checkbox-label-text checkmark">Artist <span id="artistPointsLabel"></span>: <span id="artistsSpan"></span></span>
             </label>
         </div>
         <div>
             <label class="custom-checkbox">
                 <input type="checkbox" id="releaseDateCheckbox"/>
-                <span class="checkbox-label-text checkmark">Release Date: <span id="releaseSpan"></span></span>
+                <span class="checkbox-label-text checkmark">Release year <span id="releaseYearPointsLabel"></span>: <span id="releaseSpan"></span></span>
             </label>
         </div>
-        <button class="primary-button" id="confirmButton">Confirm</button>
+        <button class="primary-button" id="confirmButton">Award points</button>
     </div>
     <div class="players-container" aria-label="Scoreboard"></div>
+    <section id="endGameContainer" class="end-game-container" hidden>
+        <h2>Final rankings</h2>
+        <ol id="rankingsList" class="rankings-list"></ol>
+        <a class="primary-button play-again-button" href="/songfy/">Play again</a>
+    </section>
 </div>
 
 <script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
