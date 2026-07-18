@@ -13,6 +13,8 @@ const SONGS_API_PATH = '/songfy/get-songs';
 
 const params = new URLSearchParams(window.location.search);
 const playlistId = params.get('playlistId') ?? '';
+const players = params.getAll('player').map(name => name.trim()).filter(Boolean);
+const NUMBER_OF_ROUNDS = getIntegerSetting('rounds', 10, 1, 100);
 
 const SONG_PLAYBACK_DURATION_MS =
     getIntegerSetting('songDurationSeconds', 25, 1, 300) * 1_000;
@@ -27,7 +29,6 @@ const RELEASE_YEAR_POINTS =
     getIntegerSetting('releaseYearPoints', 1, 0, 100);
 
 let iFrameApi;
-let players = [];
 let currentPlayer = 0;
 
 let domReady = false;
@@ -37,9 +38,12 @@ let gameStarted = false;
 document.addEventListener('DOMContentLoaded', () => {
     domReady = true;
 
-    document
-        .getElementById('add-player-btn')
-        .addEventListener('click', addPlayer);
+    if (players.length === 0) {
+        window.location.replace('/songfy/?playersRequired=1');
+        return;
+    }
+
+    renderScoreboard();
 
     document
         .getElementById('confirmButton')
@@ -78,7 +82,7 @@ async function start() {
             song => !song.yearReleased.includes('2025')
         );
 
-        const songs = shuffle(eligibleSongs);
+        const songs = shuffle(eligibleSongs).slice(0, players.length * NUMBER_OF_ROUNDS);
 
         if (songs.length === 0) {
             throw new Error('No songs were returned for this playlist.');
@@ -275,102 +279,23 @@ function shuffle(array) {
     return array;
 }
 
-function addPlayer() {
-    const playerNameInput =
-        document.getElementById('add-player-input');
-
-    const playerName = playerNameInput.value.trim();
-
-    if (playerName.length === 0) {
-        return;
-    }
-
-    const playerElement = document.createElement('div');
-    const playerElementHtml = `
-        <div>
-            <span class="value">${escapeHtml(playerName)}</span>
-            <span>has</span>
-            <span class="value">
-                <span class="points">0</span> points
-            </span>
-        </div>
-    `;
-
-    const deleteBtn = document.createElement('button');
-
-    const playersContainer =
-        document.getElementsByClassName('players-container')[0];
-
-    const addPlayerContainer =
-        document.getElementsByClassName('add-player-container')[0];
-
-    deleteBtn.innerText = 'X';
-    deleteBtn.type = 'button';
-    deleteBtn.addEventListener('click', deletePlayer);
-
-    playerElement.classList.add('player-container');
-    playerElement.innerHTML = playerElementHtml;
-    playerElement.appendChild(deleteBtn);
-
-    playersContainer.insertBefore(
-        playerElement,
-        addPlayerContainer
-    );
-
-    if (players.length === 0) {
-        playerElement.classList.add('current-player');
-    }
-
-    players.push(playerName);
-    playerNameInput.value = '';
-}
-
-function deletePlayer(event) {
-    const playerElement =
-        event.target.closest('.player-container');
-
-    if (!playerElement) {
-        return;
-    }
-
-    const playerElements = Array.from(
-        document.querySelectorAll(
-            '.players-container > .player-container'
-        )
-    );
-
-    const playerIndex = playerElements.indexOf(playerElement);
-
-    if (playerIndex === -1) {
-        return;
-    }
-
-    const wasCurrentPlayer =
-        playerElement.classList.contains('current-player');
-
-    playerElement.remove();
-    players.splice(playerIndex, 1);
-
-    if (players.length === 0) {
-        currentPlayer = 0;
-        return;
-    }
-
-    if (playerIndex < currentPlayer) {
-        currentPlayer--;
-    } else if (currentPlayer >= players.length) {
-        currentPlayer = 0;
-    }
-
-    if (wasCurrentPlayer) {
-        const remainingPlayerElements =
-            document.querySelectorAll(
-                '.players-container > .player-container'
-            );
-
-        remainingPlayerElements[currentPlayer]
-            .classList.add('current-player');
-    }
+function renderScoreboard() {
+    const container = document.querySelector(".players-container");
+    players.forEach((playerName, index) => {
+        const playerElement = document.createElement("div");
+        const name = document.createElement("span");
+        const score = document.createElement("span");
+        const points = document.createElement("span");
+        playerElement.className = "player-container";
+        if (index === 0) playerElement.classList.add("current-player");
+        name.className = "value";
+        name.textContent = playerName;
+        points.className = "points";
+        points.textContent = "0";
+        score.append(points, " points");
+        playerElement.append(name, score);
+        container.appendChild(playerElement);
+    });
 }
 
 function finishPlayerTurn() {
@@ -459,12 +384,4 @@ function getIntegerSetting(name, defaultValue, minimum, maximum) {
     }
 
     return value;
-}
-
-function escapeHtml(value) {
-    const element = document.createElement('div');
-
-    element.textContent = value;
-
-    return element.innerHTML;
 }
