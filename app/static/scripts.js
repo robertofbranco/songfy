@@ -58,7 +58,7 @@ async function start() {
         let counter = 0;
         let timeoutId;
         let expectedSongUri;
-        let songReady = false;
+        let embedReady = false;
         let waitingForPlaybackStart = false;
 
         const songs = shuffle(
@@ -87,25 +87,10 @@ async function start() {
             expectedSongUri = `spotify:track:${currentSong.id}`;
             togglePlayBtn(false, 'Loading...');
 
-            EmbedController.addListener(
-                'playback_update',
-                event => {
-                    const playback = event.data;
-
-                    if (!playback) {
-                        return;
-                    }
-
-                    if (
-                        playback.playingURI === expectedSongUri &&
-                        !playback.isBuffering &&
-                        playback.duration > 0
-                    ) {
-                        songReady = true;
-                        togglePlayBtn(true);
-                    }
-                }
-            );
+            EmbedController.addListener('ready', () => {
+                embedReady = true;
+                togglePlayBtn(true);
+            });
 
             EmbedController.addListener(
                 'playback_started',
@@ -130,7 +115,7 @@ async function start() {
             );
 
             playButton.addEventListener('click', () => {
-                if (!songReady || waitingForPlaybackStart) {
+                if (!embedReady || waitingForPlaybackStart) {
                     return;
                 }
 
@@ -167,8 +152,6 @@ async function start() {
 
                 currentSong = songs[counter];
                 expectedSongUri = `spotify:track:${currentSong.id}`;
-                songReady = false;
-
                 togglePlayBtn(false, 'Loading...');
 
                 EmbedController.loadEntity(
@@ -176,6 +159,10 @@ async function start() {
                     false,
                     30
                 );
+
+                // The controller stays ready while switching entities. Spotify
+                // will finish loading/buffering after the user starts playback.
+                togglePlayBtn(true);
 
                 toggleDisplayedContainer();
             });
