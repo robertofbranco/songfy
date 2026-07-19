@@ -6,6 +6,7 @@ const gameScript = readFileSync('app/static/scripts.js', 'utf8');
 
 function loadGame(search = '?player=Alice&player=Roberto') {
     const dom = new JSDOM(`
+        <main id="gameplayContainer">
         <h1 id="roundHeader"></h1>
         <p id="resultMessage" hidden></p>
         <div id="buttonContainer" class="button-container"></div>
@@ -17,6 +18,7 @@ function loadGame(search = '?player=Alice&player=Roberto') {
         <input id="artistsCheckbox" type="checkbox">
         <input id="releaseDateCheckbox" type="checkbox">
         <div class="players-container"></div>
+        </main>
         <ol id="rankingsList"></ol>
         <section id="endGameContainer" hidden></section>
     `, {
@@ -107,10 +109,12 @@ describe('end game', () => {
         dom.window.showEndGame();
 
         const rankings = [...document.querySelectorAll('#rankingsList li')]
-            .map(item => item.textContent);
-        expect(rankings).toEqual(['Roberto7 points', 'Alice2 points']);
+            .map(item => item.querySelector('.ranking-player').textContent);
+        expect(rankings).toEqual(['Roberto', 'Alice']);
+        expect(document.querySelector('.ranking-winner .ranking-points').textContent)
+            .toBe('7 points');
         expect(document.querySelector('#endGameContainer').hidden).toBe(false);
-        expect(document.querySelector('.players-container').hidden).toBe(true);
+        expect(document.querySelector('#gameplayContainer').hidden).toBe(true);
     });
 
     it('shuffles without adding or removing entries', () => {
