@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from fastapi import FastAPI, Request
 from fastapi.templating import Jinja2Templates
 from app.spotify_service import SpotifyService
@@ -31,9 +31,12 @@ async def read_root(request: Request):
 
 
 @router.get("/get-songs")
-async def get_songs(playlistId: str = None):
+async def get_songs(songCount: int = Query(ge=1), playlistId: str = None):
     if not playlistId:
         playlistId = '2YRe7HRKNRvXdJBp9nXFza'
 
     spotify_setlist_service = SpotifyService()
-    return await spotify_setlist_service.get_playlist_songs(playlistId)
+    return await spotify_setlist_service.get_playlist_songs(
+        playlistId,
+        songCount,
+    )

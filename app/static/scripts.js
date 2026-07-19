@@ -87,15 +87,13 @@ async function start() {
         let pendingPlayRetryId;
         let currentEntityReady = false;
 
-        const eligibleSongs = (await getSongs()).filter(
-            song => !song.yearReleased.includes('2025')
-        );
-
-        const songs = shuffle(eligibleSongs).slice(0, players.length * NUMBER_OF_ROUNDS);
+        const songs = await getSongs();
 
         if (songs.length === 0) {
             throw new Error('No songs were returned for this playlist.');
         }
+
+        finishSongLoading();
 
         let currentSong = songs[counter];
 
@@ -295,6 +293,7 @@ async function start() {
         iFrameApi.createController(element, options, callback);
     } catch (error) {
         console.error('Failed to start the game:', error);
+        finishSongLoading(false);
 
         const playButton = document.getElementById('playBtn');
 
@@ -302,6 +301,16 @@ async function start() {
             playButton.disabled = true;
             playButton.innerText = 'Unable to load songs';
         }
+    }
+}
+
+function finishSongLoading(enableControls = true) {
+    document.getElementById('gameLoader').hidden = true;
+    document.getElementById('gameContent').hidden = false;
+
+    if (enableControls) {
+        document.getElementById('nextBtn').disabled = false;
+        document.getElementById('confirmButton').disabled = false;
     }
 }
 
@@ -314,6 +323,11 @@ function togglePlayBtn(enabled, disabledText = 'Playing...') {
 
 async function getSongs() {
     const url = new URL(SONGS_API_PATH, window.location.origin);
+
+    url.searchParams.set(
+        'songCount',
+        players.length * NUMBER_OF_ROUNDS
+    );
 
     if (playlistId) {
         url.searchParams.set('playlistId', playlistId);
@@ -354,15 +368,6 @@ function toggleDisplayedContainer() {
         infoContainer.classList.remove('info-container');
         btnContainer.classList.add('button-container');
     }
-}
-
-function shuffle(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-
-    return array;
 }
 
 function renderScoreboard() {

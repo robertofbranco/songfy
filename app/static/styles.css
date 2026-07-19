@@ -113,6 +113,41 @@ button {
     display: none;
 }
 
+.game-content {
+    display: contents;
+}
+
+.game-content[hidden] {
+    display: none;
+}
+
+.game-loader {
+    display: flex;
+    flex-basis: 100%;
+    align-items: center;
+    justify-content: center;
+    gap: .75rem;
+    color: var(--color-primary);
+    font-weight: bold;
+}
+
+.game-loader[hidden] {
+    display: none;
+}
+
+.loader-spinner {
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 3px solid var(--color-disabled);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: loader-spin .8s linear infinite;
+}
+
+@keyframes loader-spin {
+    to { transform: rotate(360deg); }
+}
+
 .end-game-container {
     display: grid;
     box-sizing: border-box;
