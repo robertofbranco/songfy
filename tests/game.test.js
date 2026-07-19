@@ -10,6 +10,7 @@ function loadGame(search = '?player=Alice&player=Roberto') {
         <h1 id="roundHeader"></h1>
         <p id="resultMessage" hidden></p>
         <div id="gameLoader"></div>
+        <div id="gameContent" hidden></div>
         <div id="buttonContainer" class="button-container">
         <button id="playBtn" disabled></button>
         <button id="nextBtn" disabled></button>
@@ -53,9 +54,12 @@ describe('game settings', () => {
         const dom = loadGame();
         const document = dom.window.document;
 
+        expect(document.querySelector('#gameContent').hidden).toBe(true);
+
         dom.window.finishSongLoading();
 
         expect(document.querySelector('#gameLoader').hidden).toBe(true);
+        expect(document.querySelector('#gameContent').hidden).toBe(false);
         expect(document.querySelector('#playBtn').disabled).toBe(true);
         expect(document.querySelector('#nextBtn').disabled).toBe(false);
         expect(document.querySelector('#confirmButton').disabled).toBe(false);

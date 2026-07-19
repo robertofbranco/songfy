@@ -293,7 +293,7 @@ async function start() {
         iFrameApi.createController(element, options, callback);
     } catch (error) {
         console.error('Failed to start the game:', error);
-        hideGameLoader();
+        finishSongLoading(false);
 
         const playButton = document.getElementById('playBtn');
 
@@ -304,14 +304,14 @@ async function start() {
     }
 }
 
-function finishSongLoading() {
-    hideGameLoader();
-    document.getElementById('nextBtn').disabled = false;
-    document.getElementById('confirmButton').disabled = false;
-}
-
-function hideGameLoader() {
+function finishSongLoading(enableControls = true) {
     document.getElementById('gameLoader').hidden = true;
+    document.getElementById('gameContent').hidden = false;
+
+    if (enableControls) {
+        document.getElementById('nextBtn').disabled = false;
+        document.getElementById('confirmButton').disabled = false;
+    }
 }
 
 function togglePlayBtn(enabled, disabledText = 'Playing...') {

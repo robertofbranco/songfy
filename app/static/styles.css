@@ -113,6 +113,14 @@ button {
     display: none;
 }
 
+.game-content {
+    display: contents;
+}
+
+.game-content[hidden] {
+    display: none;
+}
+
 .game-loader {
     display: flex;
     flex-basis: 100%;
