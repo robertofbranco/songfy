@@ -82,6 +82,10 @@ async function start() {
         let waitingForPlaybackStart = false;
         let currentSongPlayed = false;
         let gameFinished = false;
+        let entityLoadFallbackId;
+        let playbackStartWatchdogId;
+        let pendingPlayRetryId;
+        let currentEntityReady = false;
 
         const eligibleSongs = (await getSongs()).filter(
             song => !song.yearReleased.includes('2025')
@@ -111,9 +115,12 @@ async function start() {
 
             EmbedController.addListener('ready', () => {
                 embedReady = true;
+                markEntityReady(expectedSongUri);
+            });
 
-                if (!gameFinished) {
-                    togglePlayBtn(true);
+            EmbedController.addListener('playback_update', event => {
+                if (event.data?.playingURI === expectedSongUri) {
+                    markEntityReady(expectedSongUri);
                 }
             });
 
@@ -130,7 +137,10 @@ async function start() {
                     }
 
                     waitingForPlaybackStart = false;
+                    currentSongPlayed = true;
+                    clearPendingPlayTimers();
                     clearPlaybackTimeout();
+                    togglePlayBtn(false, 'Playing...');
 
                     timeoutId = setTimeout(() => {
                         EmbedController.pause();
@@ -142,6 +152,7 @@ async function start() {
             playButton.addEventListener('click', () => {
                 if (
                     !embedReady ||
+                    !currentEntityReady ||
                     waitingForPlaybackStart ||
                     currentSongPlayed ||
                     gameFinished
@@ -150,18 +161,21 @@ async function start() {
                 }
 
                 clearPlaybackTimeout();
+                clearPendingPlayTimers();
 
                 waitingForPlaybackStart = true;
-                currentSongPlayed = true;
-                togglePlayBtn(false, 'Playing...');
+                togglePlayBtn(false, 'Starting...');
 
-                EmbedController.play();
+                attemptPlayback();
             });
 
             nextButton.addEventListener('click', () => {
                 clearPlaybackTimeout();
+                clearEntityLoadTimer();
+                clearPendingPlayTimers();
 
                 waitingForPlaybackStart = false;
+                currentSongPlayed = false;
 
                 EmbedController.pause();
 
@@ -188,8 +202,7 @@ async function start() {
 
                 currentSong = songs[counter];
                 expectedSongUri = `spotify:track:${currentSong.id}`;
-                currentSongPlayed = false;
-                togglePlayBtn(false, 'Loading...');
+                beginEntityLoading(expectedSongUri);
 
                 EmbedController.loadEntity(
                     expectedSongUri,
@@ -197,12 +210,79 @@ async function start() {
                     30
                 );
 
-                // The controller stays ready while switching entities. Spotify
-                // will finish loading/buffering after the user starts playback.
-                togglePlayBtn(true);
-
                 toggleDisplayedContainer();
             });
+
+            function clearEntityLoadTimer() {
+                if (entityLoadFallbackId) {
+                    clearTimeout(entityLoadFallbackId);
+                    entityLoadFallbackId = undefined;
+                }
+            }
+
+            function clearPendingPlayTimers() {
+                if (pendingPlayRetryId) {
+                    clearTimeout(pendingPlayRetryId);
+                    pendingPlayRetryId = undefined;
+                }
+
+                if (playbackStartWatchdogId) {
+                    clearTimeout(playbackStartWatchdogId);
+                    playbackStartWatchdogId = undefined;
+                }
+            }
+
+            function markEntityReady(songUri) {
+                if (songUri !== expectedSongUri || gameFinished) {
+                    return;
+                }
+
+                clearEntityLoadTimer();
+                currentEntityReady = true;
+
+                if (!waitingForPlaybackStart && !currentSongPlayed) {
+                    togglePlayBtn(true);
+                }
+            }
+
+            function beginEntityLoading(songUri) {
+                clearEntityLoadTimer();
+                clearPendingPlayTimers();
+                currentEntityReady = false;
+                togglePlayBtn(false, 'Loading...');
+
+                entityLoadFallbackId = setTimeout(() => {
+                    markEntityReady(songUri);
+                }, 1_500);
+            }
+
+            function attemptPlayback() {
+                const songUri = expectedSongUri;
+
+                EmbedController.play();
+
+                pendingPlayRetryId = setTimeout(() => {
+                    if (
+                        waitingForPlaybackStart &&
+                        !currentSongPlayed &&
+                        songUri === expectedSongUri
+                    ) {
+                        EmbedController.play();
+                    }
+                }, 1_500);
+
+                playbackStartWatchdogId = setTimeout(() => {
+                    if (
+                        waitingForPlaybackStart &&
+                        !currentSongPlayed &&
+                        songUri === expectedSongUri
+                    ) {
+                        waitingForPlaybackStart = false;
+                        clearPendingPlayTimers();
+                        togglePlayBtn(true);
+                    }
+                }, 6_000);
+            }
 
             function clearPlaybackTimeout() {
                 if (timeoutId) {
