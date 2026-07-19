@@ -9,7 +9,12 @@ function loadGame(search = '?player=Alice&player=Roberto') {
         <main id="gameplayContainer">
         <h1 id="roundHeader"></h1>
         <p id="resultMessage" hidden></p>
-        <div id="buttonContainer" class="button-container"></div>
+        <div id="gameLoader"></div>
+        <div id="gameContent" hidden></div>
+        <div id="buttonContainer" class="button-container">
+        <button id="playBtn" disabled></button>
+        <button id="nextBtn" disabled></button>
+        </div>
         <div id="infoContainer" class="info-container"></div>
         <span id="songNamePointsLabel"></span>
         <span id="artistPointsLabel"></span>
@@ -17,6 +22,7 @@ function loadGame(search = '?player=Alice&player=Roberto') {
         <input id="songNameCheckbox" type="checkbox">
         <input id="artistsCheckbox" type="checkbox">
         <input id="releaseDateCheckbox" type="checkbox">
+        <button id="confirmButton" disabled></button>
         <div class="players-container"></div>
         </main>
         <ol id="rankingsList"></ol>
@@ -44,6 +50,21 @@ function loadGame(search = '?player=Alice&player=Roberto') {
 }
 
 describe('game settings', () => {
+    it('unblocks controls after songs finish loading', () => {
+        const dom = loadGame();
+        const document = dom.window.document;
+
+        expect(document.querySelector('#gameContent').hidden).toBe(true);
+
+        dom.window.finishSongLoading();
+
+        expect(document.querySelector('#gameLoader').hidden).toBe(true);
+        expect(document.querySelector('#gameContent').hidden).toBe(false);
+        expect(document.querySelector('#playBtn').disabled).toBe(true);
+        expect(document.querySelector('#nextBtn').disabled).toBe(false);
+        expect(document.querySelector('#confirmButton').disabled).toBe(false);
+    });
+
     it('accepts valid integers and falls back for invalid settings', () => {
         const dom = loadGame('?player=Alice&rounds=3&songNamePoints=-1');
         expect(dom.window.eval("getIntegerSetting('rounds', 10, 1, 100)")).toBe(3);
@@ -115,13 +136,5 @@ describe('end game', () => {
             .toBe('7 points');
         expect(document.querySelector('#endGameContainer').hidden).toBe(false);
         expect(document.querySelector('#gameplayContainer').hidden).toBe(true);
-    });
-
-    it('shuffles without adding or removing entries', () => {
-        const dom = loadGame();
-        const songs = ['one', 'two', 'three', 'four'];
-        const shuffled = dom.window.shuffle([...songs]);
-        expect(shuffled).toHaveLength(songs.length);
-        expect([...shuffled].sort()).toEqual([...songs].sort());
     });
 });

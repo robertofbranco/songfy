@@ -10,11 +10,16 @@
 <div id="embed-iframe"></div>
 <div id="gameContainer" class="game-container">
     <main id="gameplayContainer" class="gameplay-container">
+    <div id="gameLoader" class="game-loader" role="status" aria-live="polite">
+        <span class="loader-spinner" aria-hidden="true"></span>
+        <span>Loading songs…</span>
+    </div>
+    <div id="gameContent" class="game-content" hidden>
     <h1 id="roundHeader" class="round-header"></h1>
     <p id="resultMessage" class="result-message" role="status" aria-live="polite" hidden></p>
     <div id="buttonContainer" class="button-container">
-        <button id="playBtn" class="primary-button main-button">Play</button>
-        <button id="nextBtn" class="secondary-button next-button">Reveal answer</button>
+        <button id="playBtn" class="primary-button main-button" disabled>Play</button>
+        <button id="nextBtn" class="secondary-button next-button" disabled>Reveal answer</button>
     </div>
     <div id="infoContainer" hidden>
         <div>
@@ -35,9 +40,10 @@
                 <span class="checkbox-label-text checkmark">Release year <span id="releaseYearPointsLabel"></span>: <span id="releaseSpan"></span></span>
             </label>
         </div>
-        <button class="primary-button" id="confirmButton">Award points</button>
+        <button class="primary-button" id="confirmButton" disabled>Award points</button>
     </div>
     <div class="players-container" aria-label="Scoreboard"></div>
+    </div>
     </main>
     <section id="endGameContainer" class="end-game-container" hidden>
         <p class="end-game-eyebrow">Game complete</p>
