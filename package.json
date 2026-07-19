@@ -1,0 +1,24 @@
+{
+  "name": "songfy",
+  "version": "1.0.0",
+  "description": "Check it out on: https://songfy-dueae8btf4dnasbx.polandcentral-01.azurewebsites.net/songfy/",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/robertofbranco/songfy.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/robertofbranco/songfy/issues"
+  },
+  "homepage": "https://github.com/robertofbranco/songfy#readme",
+  "devDependencies": {
+    "jsdom": "^29.1.1",
+    "vitest": "^4.1.10"
+  }
+}

@@ -9,6 +9,7 @@
 <body>
 <div id="embed-iframe"></div>
 <div id="gameContainer" class="game-container">
+    <main id="gameplayContainer" class="gameplay-container">
     <h1 id="roundHeader" class="round-header"></h1>
     <p id="resultMessage" class="result-message" role="status" aria-live="polite" hidden></p>
     <div id="buttonContainer" class="button-container">
@@ -37,8 +38,11 @@
         <button class="primary-button" id="confirmButton">Award points</button>
     </div>
     <div class="players-container" aria-label="Scoreboard"></div>
+    </main>
     <section id="endGameContainer" class="end-game-container" hidden>
-        <h2>Final rankings</h2>
+        <p class="end-game-eyebrow">Game complete</p>
+        <h1>Final rankings</h1>
+        <p class="end-game-summary">Great game! Here’s how everyone finished.</p>
         <ol id="rankingsList" class="rankings-list"></ol>
         <a class="primary-button play-again-button" href="/songfy/">Play again</a>
     </section>

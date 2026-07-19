@@ -1,23 +1,65 @@
-Check it out on: https://songfy-dueae8btf4dnasbx.polandcentral-01.azurewebsites.net/songfy/
+# Songfy
 
-Songfy is a couch multiplayer game which players must
-guess the songs information to obtain points.
-Current information available: song's name, artists, and release date.
+Songfy is a couch multiplayer music-guessing game powered by Spotify playlists.
+Players listen to a song excerpt and earn configurable points for identifying the
+song name, artist, and release year.
 
-In the first page, the players can choose the set of songs
-by inserting a link to a Spotify's playlist, or play with
-the default set.\
-Upcoming: choose songs based on more predefined sets.
+Live app: https://songfy-dueae8btf4dnasbx.polandcentral-01.azurewebsites.net/songfy/
 
-On the game page, the players can add their names and start playing.
-The marked border indicates the player's turn.\
-Click on 'Play' and listen the song.\
-When the player or the song is done. Move forward by pressing the '>' button. \
-Finally, select the items the player got right and confirm.\
-It's the next player turn now.
+## Playing the game
 
-Running it locally:
-Requirements: Python 3 installed and Spotify API credentials
-1. In the folder, run 'pip install -r requirements.txt'
-2. Once the installation is done, run 'uvicorn main:app --host 0.0.0.0 --port 8000'
-3. Access the web address 'localhost:8000/songfy'
+1. Optionally paste a Spotify playlist link. Leaving it blank uses the default playlist.
+2. Add every player taking part.
+3. Optionally configure the song duration, number of rounds, and points awarded for each answer.
+4. Select **Start game**.
+5. Follow the round header to see whose turn it is, then select **Play** to hear the excerpt.
+6. Select **Reveal answer**, mark each correct answer, and select **Award points**.
+
+The scoreboard highlights the current player and a brief message reports the points
+earned after every turn. When all rounds are complete, Songfy displays the final
+rankings and each player's total points. Select **Play again** to return to game setup.
+
+## Run locally
+
+Requirements:
+
+- Python 3
+- Spotify API credentials
+
+Create a `.env` file containing:
+
+```dotenv
+CLIENT_ID=your_spotify_client_id
+CLIENT_SECRET=your_spotify_client_secret
+REDIRECT_URI=your_spotify_redirect_uri
+```
+
+Install the application dependencies and start the server:
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+Open http://localhost:8000/songfy/.
+
+## Tests
+
+Install the backend and frontend test dependencies:
+
+```bash
+.venv/bin/python -m pip install -r requirements-dev.txt
+npm install
+```
+
+Run both suites:
+
+```bash
+.venv/bin/python -m pytest
+npm test
+```
+
+The backend suite tests Spotify playlist mapping, duplicate removal, and playlist
+selection in the API. The frontend suite tests settings validation, configured point
+labels, scoring and turn progression, result messages, final rankings, and shuffling.
