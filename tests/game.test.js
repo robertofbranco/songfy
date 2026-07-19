@@ -116,12 +116,4 @@ describe('end game', () => {
         expect(document.querySelector('#endGameContainer').hidden).toBe(false);
         expect(document.querySelector('#gameplayContainer').hidden).toBe(true);
     });
-
-    it('shuffles without adding or removing entries', () => {
-        const dom = loadGame();
-        const songs = ['one', 'two', 'three', 'four'];
-        const shuffled = dom.window.shuffle([...songs]);
-        expect(shuffled).toHaveLength(songs.length);
-        expect([...shuffled].sort()).toEqual([...songs].sort());
-    });
 });

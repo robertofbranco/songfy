@@ -87,8 +87,7 @@ async function start() {
         let pendingPlayRetryId;
         let currentEntityReady = false;
 
-        const songs = shuffle(await getSongs())
-            .slice(0, players.length * NUMBER_OF_ROUNDS);
+        const songs = await getSongs();
 
         if (songs.length === 0) {
             throw new Error('No songs were returned for this playlist.');
@@ -356,15 +355,6 @@ function toggleDisplayedContainer() {
         infoContainer.classList.remove('info-container');
         btnContainer.classList.add('button-container');
     }
-}
-
-function shuffle(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-
-    return array;
 }
 
 function renderScoreboard() {
