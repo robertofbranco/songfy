@@ -31,7 +31,7 @@ button {
         align-items: center;
     }
 
-    body > div > div {
+    .gameplay-container > div {
         max-width: 300px;
     }
 
@@ -78,12 +78,19 @@ button {
 }
 
 .game-container {
+    width: min(900px, 90%);
+}
+
+.gameplay-container {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
     gap: 2rem;
-    width: 90%;
     justify-content: center;
+}
+
+.gameplay-container[hidden] {
+    display: none;
 }
 
 .round-header {
@@ -108,47 +115,91 @@ button {
 
 .end-game-container {
     display: grid;
-    flex-basis: min(28rem, 100%);
-    gap: 1rem;
+    box-sizing: border-box;
+    width: min(34rem, 100%);
+    gap: 1.25rem;
+    margin: 0 auto;
+    padding: clamp(1.5rem, 5vw, 2.5rem);
     text-align: center;
+    border: 1px solid var(--color-border);
+    border-radius: 1.25rem;
+    background: var(--color-surface);
+    box-shadow: 0 12px 32px var(--color-shadow);
 }
 
 .end-game-container[hidden] {
     display: none;
 }
 
-.end-game-container h2 {
+.end-game-container h1,
+.end-game-container p {
     margin: 0;
+}
+
+.end-game-container h1 {
+    color: var(--color-primary-dark);
+    font-size: clamp(2rem, 7vw, 3rem);
+}
+
+.end-game-eyebrow {
+    color: var(--color-primary);
+    font-size: 0.8rem;
+    font-weight: bold;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.end-game-summary {
+    color: var(--color-disabled-text);
 }
 
 .rankings-list {
     display: grid;
-    gap: 0.5rem;
+    gap: 0.75rem;
     margin: 0;
-    padding-left: 2rem;
+    padding: 0;
+    list-style: none;
 }
 
-.rankings-list li {
-    padding: 0.75rem 1rem;
+.ranking-item {
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.9rem 1rem;
     border: 1px solid var(--color-border);
-    border-radius: 0.5rem;
-    background: var(--color-surface);
+    border-radius: 0.75rem;
+    background: var(--color-background);
+    text-align: left;
 }
 
-.rankings-list li::marker {
+.ranking-winner {
+    border-color: var(--color-accent);
+    background: linear-gradient(135deg, #fff7d6, var(--color-surface));
+    box-shadow: 0 4px 14px rgba(254, 186, 23, 0.2);
+}
+
+.ranking-position {
+    color: var(--color-primary);
     font-weight: bold;
+    text-align: center;
 }
 
-.rankings-list li span:first-child {
-    float: left;
+.ranking-player {
+    overflow: hidden;
     font-weight: bold;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.rankings-list li span:last-child {
-    float: right;
+.ranking-points {
+    color: var(--color-primary-dark);
+    font-weight: bold;
+    white-space: nowrap;
 }
 
 .play-again-button {
+    margin-top: 0.25rem;
     text-decoration: none;
 }
 

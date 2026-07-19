@@ -422,20 +422,28 @@ function showEndGame() {
     );
 
     const rankingsList = document.getElementById('rankingsList');
-    rankingsList.replaceChildren(...rankedPlayers.map(player => {
+    rankingsList.replaceChildren(...rankedPlayers.map((player, index) => {
         const item = document.createElement('li');
+        const position = document.createElement('span');
         const name = document.createElement('span');
         const total = document.createElement('span');
+        item.className = 'ranking-item';
+        if (index === 0) {
+            item.classList.add('ranking-winner');
+        }
+        position.className = 'ranking-position';
+        position.textContent = index === 0 ? '🏆' : `#${index + 1}`;
+        position.setAttribute('aria-label', `Place ${index + 1}`);
+        name.className = 'ranking-player';
         name.textContent = player.name;
+        total.className = 'ranking-points';
         total.textContent = `${player.points} points`;
-        item.append(name, total);
+        item.append(position, name, total);
         return item;
     }));
 
-    document.getElementById('roundHeader').hidden = true;
-    document.getElementById('buttonContainer').hidden = true;
-    document.getElementById('infoContainer').hidden = true;
-    document.querySelector('.players-container').hidden = true;
+    clearTimeout(resultMessageTimeoutId);
+    document.getElementById('gameplayContainer').hidden = true;
     document.getElementById('endGameContainer').hidden = false;
 }
 
