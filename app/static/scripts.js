@@ -87,11 +87,8 @@ async function start() {
         let pendingPlayRetryId;
         let currentEntityReady = false;
 
-        const eligibleSongs = (await getSongs()).filter(
-            song => !song.yearReleased.includes('2025')
-        );
-
-        const songs = shuffle(eligibleSongs).slice(0, players.length * NUMBER_OF_ROUNDS);
+        const songs = shuffle(await getSongs())
+            .slice(0, players.length * NUMBER_OF_ROUNDS);
 
         if (songs.length === 0) {
             throw new Error('No songs were returned for this playlist.');
@@ -314,6 +311,11 @@ function togglePlayBtn(enabled, disabledText = 'Playing...') {
 
 async function getSongs() {
     const url = new URL(SONGS_API_PATH, window.location.origin);
+
+    url.searchParams.set(
+        'songCount',
+        players.length * NUMBER_OF_ROUNDS
+    );
 
     if (playlistId) {
         url.searchParams.set('playlistId', playlistId);
