@@ -10,25 +10,45 @@ Non-priority:
 */
 
 const SONGS_API_PATH = '/songfy/get-songs';
-const SONG_PLAYBACK_DURATION_MS = 25_000;
 
 const params = new URLSearchParams(window.location.search);
 const playlistId = params.get('playlistId') ?? '';
+const players = params.getAll('player').map(name => name.trim()).filter(Boolean);
+const NUMBER_OF_ROUNDS = getIntegerSetting('rounds', 10, 1, 100);
+
+const SONG_PLAYBACK_DURATION_MS =
+    getIntegerSetting('songDurationSeconds', 25, 1, 300) * 1_000;
+
+const SONG_NAME_POINTS =
+    getIntegerSetting('songNamePoints', 1, 0, 100);
+
+const ARTIST_POINTS =
+    getIntegerSetting('artistPoints', 1, 0, 100);
+
+const RELEASE_YEAR_POINTS =
+    getIntegerSetting('releaseYearPoints', 1, 0, 100);
 
 let iFrameApi;
-let players = [];
 let currentPlayer = 0;
+let currentRound = 1;
 
 let domReady = false;
 let spotifyReady = false;
 let gameStarted = false;
+let finalTurnPending = false;
+let resultMessageTimeoutId;
 
 document.addEventListener('DOMContentLoaded', () => {
     domReady = true;
 
-    document
-        .getElementById('add-player-btn')
-        .addEventListener('click', addPlayer);
+    if (players.length === 0) {
+        window.location.replace('/songfy/?playersRequired=1');
+        return;
+    }
+
+    renderScoreboard();
+    renderRoundHeader();
+    renderConfiguredPoints();
 
     document
         .getElementById('confirmButton')
@@ -67,7 +87,7 @@ async function start() {
             song => !song.yearReleased.includes('2025')
         );
 
-        const songs = shuffle(eligibleSongs);
+        const songs = shuffle(eligibleSongs).slice(0, players.length * NUMBER_OF_ROUNDS);
 
         if (songs.length === 0) {
             throw new Error('No songs were returned for this playlist.');
@@ -158,6 +178,7 @@ async function start() {
 
                 if (counter >= songs.length) {
                     gameFinished = true;
+                    finalTurnPending = true;
                     expectedSongUri = undefined;
                     togglePlayBtn(false, 'No more songs');
                     nextButton.disabled = true;
@@ -264,102 +285,38 @@ function shuffle(array) {
     return array;
 }
 
-function addPlayer() {
-    const playerNameInput =
-        document.getElementById('add-player-input');
-
-    const playerName = playerNameInput.value.trim();
-
-    if (playerName.length === 0) {
-        return;
-    }
-
-    const playerElement = document.createElement('div');
-    const playerElementHtml = `
-        <div>
-            <span class="value">${escapeHtml(playerName)}</span>
-            <span>has</span>
-            <span class="value">
-                <span class="points">0</span> points
-            </span>
-        </div>
-    `;
-
-    const deleteBtn = document.createElement('button');
-
-    const playersContainer =
-        document.getElementsByClassName('players-container')[0];
-
-    const addPlayerContainer =
-        document.getElementsByClassName('add-player-container')[0];
-
-    deleteBtn.innerText = 'X';
-    deleteBtn.type = 'button';
-    deleteBtn.addEventListener('click', deletePlayer);
-
-    playerElement.classList.add('player-container');
-    playerElement.innerHTML = playerElementHtml;
-    playerElement.appendChild(deleteBtn);
-
-    playersContainer.insertBefore(
-        playerElement,
-        addPlayerContainer
-    );
-
-    if (players.length === 0) {
-        playerElement.classList.add('current-player');
-    }
-
-    players.push(playerName);
-    playerNameInput.value = '';
+function renderScoreboard() {
+    const container = document.querySelector(".players-container");
+    players.forEach((playerName, index) => {
+        const playerElement = document.createElement("div");
+        const name = document.createElement("span");
+        const score = document.createElement("span");
+        const points = document.createElement("span");
+        playerElement.className = "player-container";
+        if (index === 0) playerElement.classList.add("current-player");
+        name.className = "value";
+        name.textContent = playerName;
+        points.className = "points";
+        points.textContent = "0";
+        score.append(points, " points");
+        playerElement.append(name, score);
+        container.appendChild(playerElement);
+    });
 }
 
-function deletePlayer(event) {
-    const playerElement =
-        event.target.closest('.player-container');
+function renderConfiguredPoints() {
+    document.getElementById('songNamePointsLabel').textContent =
+        `(+${SONG_NAME_POINTS})`;
+    document.getElementById('artistPointsLabel').textContent =
+        `(+${ARTIST_POINTS})`;
+    document.getElementById('releaseYearPointsLabel').textContent =
+        `(+${RELEASE_YEAR_POINTS})`;
+}
 
-    if (!playerElement) {
-        return;
-    }
-
-    const playerElements = Array.from(
-        document.querySelectorAll(
-            '.players-container > .player-container'
-        )
-    );
-
-    const playerIndex = playerElements.indexOf(playerElement);
-
-    if (playerIndex === -1) {
-        return;
-    }
-
-    const wasCurrentPlayer =
-        playerElement.classList.contains('current-player');
-
-    playerElement.remove();
-    players.splice(playerIndex, 1);
-
-    if (players.length === 0) {
-        currentPlayer = 0;
-        return;
-    }
-
-    if (playerIndex < currentPlayer) {
-        currentPlayer--;
-    } else if (currentPlayer >= players.length) {
-        currentPlayer = 0;
-    }
-
-    if (wasCurrentPlayer) {
-        const remainingPlayerElements =
-            document.querySelectorAll(
-                '.players-container > .player-container'
-            );
-
-        remainingPlayerElements[currentPlayer]
-            .classList.add('current-player');
-    }
+function renderRoundHeader() {
+    document.getElementById("roundHeader").textContent =
+        `Round ${currentRound} of ${NUMBER_OF_ROUNDS} — ` +
+        `${players[currentPlayer]}’s turn.`;
 }
 
 function finishPlayerTurn() {
@@ -383,8 +340,17 @@ function finishPlayerTurn() {
         releaseDateCheckbox
     ];
 
-    const pointsToAdd =
-        checkboxes.filter(checkbox => checkbox.checked).length;
+    const pointValues = [
+        SONG_NAME_POINTS,
+        ARTIST_POINTS,
+        RELEASE_YEAR_POINTS
+    ];
+
+    const pointsToAdd = checkboxes.reduce(
+        (total, checkbox, index) =>
+            total + (checkbox.checked ? pointValues[index] : 0),
+        0
+    );
 
     const playerElement =
         document.getElementsByClassName('current-player')[0];
@@ -400,12 +366,25 @@ function finishPlayerTurn() {
         Number(playerPointsElement.innerText) + pointsToAdd;
 
     playerPointsElement.innerText = playerPoints;
+    showResultMessage(players[currentPlayer], pointsToAdd);
+
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+
+    if (finalTurnPending) {
+        showEndGame();
+        return;
+    }
+
     playerElement.classList.remove('current-player');
 
-    currentPlayer =
-        currentPlayer === players.length - 1
-            ? 0
-            : currentPlayer + 1;
+    if (currentPlayer === players.length - 1) {
+        currentPlayer = 0;
+        currentRound++;
+    } else {
+        currentPlayer++;
+    }
 
     const playerElements = document.querySelectorAll(
         '.players-container > .player-container'
@@ -414,17 +393,68 @@ function finishPlayerTurn() {
     playerElements[currentPlayer]
         .classList.add('current-player');
 
+    renderRoundHeader();
+
     toggleDisplayedContainer();
 
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = false;
-    });
 }
 
-function escapeHtml(value) {
-    const element = document.createElement('div');
+function showResultMessage(playerName, points) {
+    const resultMessage = document.getElementById('resultMessage');
+    clearTimeout(resultMessageTimeoutId);
+    resultMessage.textContent = `${playerName} earned ${points} points.`;
+    resultMessage.hidden = false;
+    resultMessageTimeoutId = setTimeout(() => {
+        resultMessage.hidden = true;
+    }, 2500);
+}
 
-    element.textContent = value;
+function showEndGame() {
+    const rankedPlayers = Array.from(
+        document.querySelectorAll('.player-container'),
+        (playerElement, position) => ({
+            position,
+            name: playerElement.querySelector('.value').textContent,
+            points: Number(playerElement.querySelector('.points').textContent)
+        })
+    ).sort((first, second) =>
+        second.points - first.points || first.position - second.position
+    );
 
-    return element.innerHTML;
+    const rankingsList = document.getElementById('rankingsList');
+    rankingsList.replaceChildren(...rankedPlayers.map(player => {
+        const item = document.createElement('li');
+        const name = document.createElement('span');
+        const total = document.createElement('span');
+        name.textContent = player.name;
+        total.textContent = `${player.points} points`;
+        item.append(name, total);
+        return item;
+    }));
+
+    document.getElementById('roundHeader').hidden = true;
+    document.getElementById('buttonContainer').hidden = true;
+    document.getElementById('infoContainer').hidden = true;
+    document.querySelector('.players-container').hidden = true;
+    document.getElementById('endGameContainer').hidden = false;
+}
+
+function getIntegerSetting(name, defaultValue, minimum, maximum) {
+    const rawValue = params.get(name);
+
+    if (rawValue === null || rawValue.trim() === '') {
+        return defaultValue;
+    }
+
+    const value = Number(rawValue);
+
+    if (
+        !Number.isInteger(value) ||
+        value < minimum ||
+        value > maximum
+    ) {
+        return defaultValue;
+    }
+
+    return value;
 }
