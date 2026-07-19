@@ -93,6 +93,8 @@ async function start() {
             throw new Error('No songs were returned for this playlist.');
         }
 
+        finishSongLoading();
+
         let currentSong = songs[counter];
 
         const element = document.getElementById('embed-iframe');
@@ -291,6 +293,7 @@ async function start() {
         iFrameApi.createController(element, options, callback);
     } catch (error) {
         console.error('Failed to start the game:', error);
+        hideGameLoader();
 
         const playButton = document.getElementById('playBtn');
 
@@ -299,6 +302,16 @@ async function start() {
             playButton.innerText = 'Unable to load songs';
         }
     }
+}
+
+function finishSongLoading() {
+    hideGameLoader();
+    document.getElementById('nextBtn').disabled = false;
+    document.getElementById('confirmButton').disabled = false;
+}
+
+function hideGameLoader() {
+    document.getElementById('gameLoader').hidden = true;
 }
 
 function togglePlayBtn(enabled, disabledText = 'Playing...') {
