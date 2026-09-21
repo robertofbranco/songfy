@@ -109,6 +109,16 @@ async function start() {
             togglePlayBtn(false, 'Spotify disconnected');
         });
 
+        player.addListener('initialization_error', event => {
+            showPlaybackError(`Spotify cannot initialize on this browser: ${event.message}`);
+        });
+        player.addListener('account_error', event => {
+            showPlaybackError(`Spotify Premium playback is unavailable: ${event.message}`);
+        });
+        player.addListener('autoplay_failed', () => {
+            showPlaybackError('Tap Play again to allow Spotify playback on this phone.');
+        });
+
         for (const eventName of [
             'initialization_error',
             'authentication_error',
@@ -206,7 +216,12 @@ async function start() {
             }
         }
 
-        const connected = await player.connect();
+        const connection = player.connect();
+        const timeout = new Promise((_, reject) => setTimeout(
+            () => reject(new Error('Spotify player connection timed out.')),
+            15_000
+        ));
+        const connected = await Promise.race([connection, timeout]);
 
         if (!connected) {
             throw new Error('Spotify Web Playback SDK could not connect.');
@@ -219,8 +234,18 @@ async function start() {
 
         if (playButton) {
             playButton.disabled = true;
-            playButton.innerText = 'Unable to load songs';
+            playButton.innerText = 'Spotify unavailable';
         }
+    }
+}
+
+function showPlaybackError(message) {
+    console.error(message);
+    finishSongLoading(false);
+    const playButton = document.getElementById('playBtn');
+    if (playButton) {
+        playButton.disabled = true;
+        playButton.innerText = 'Spotify unavailable';
     }
 }
 

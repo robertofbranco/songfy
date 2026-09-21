@@ -156,10 +156,13 @@ async function saveLobbySettings() {
 
 async function playSong() {
     try {
+        // Mobile Safari/Chrome require this to happen directly from the tap
+        // gesture, before any network await can consume the user activation.
+        if (!spotifyPlayer || !spotifyDeviceId) throw new Error('Spotify player is not ready.');
+        await spotifyPlayer.activateElement();
         const state = await hostRequest('POST', '/play');
         const controller = state.controller;
-        if (!spotifyPlayer || !spotifyDeviceId || !controller) throw new Error('Spotify player is not ready.');
-        await spotifyPlayer.activateElement();
+        if (!controller) throw new Error('Spotify did not provide a track to play.');
         const token = await spotifyToken();
         const response = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${encodeURIComponent(spotifyDeviceId)}`, {
             method: 'PUT', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -227,7 +230,14 @@ function initializeSpotifyPlayer() {
     spotifyPlayer = new Spotify.Player({ name: `Songfy room ${roomCode}`, volume: 0.8, getOAuthToken: callback => spotifyToken().then(callback) });
     spotifyPlayer.addListener('ready', event => { spotifyDeviceId = event.device_id; });
     spotifyPlayer.addListener('authentication_error', () => showError('Spotify login expired.'));
-    spotifyPlayer.connect();
+    spotifyPlayer.addListener('initialization_error', event => showError(`Spotify cannot initialize on this browser: ${event.message}`));
+    spotifyPlayer.addListener('account_error', event => showError(`Spotify Premium playback is unavailable: ${event.message}`));
+    spotifyPlayer.addListener('autoplay_failed', () => showError('Tap Play again to allow Spotify playback on this phone.'));
+    const connection = spotifyPlayer.connect();
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Spotify player connection timed out.')), 15000));
+    Promise.race([connection, timeout]).then(connected => {
+        if (!connected) throw new Error('Spotify player could not connect.');
+    }).catch(error => showError(error.message));
 }
 
 async function spotifyToken() {
