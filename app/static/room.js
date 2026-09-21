@@ -1,7 +1,9 @@
 const roomCode = document.body.dataset.roomCode;
 const isHost = document.body.dataset.isHost === 'true';
 let roomState;
-let hostPlayers = [];
+// `var` keeps this page-local collection accessible to the browser test harness
+// while remaining scoped to this room document.
+var hostPlayers = [];
 let spotifyPlayer;
 let spotifyDeviceId;
 let excerptTimer;
