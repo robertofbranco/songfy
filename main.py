@@ -1,10 +1,20 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.sessions import SessionMiddleware
+from os import getenv
+from secrets import token_urlsafe
 import uvicorn
 import app.songfy as songfy
 
 app = FastAPI()
+
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=getenv("SESSION_SECRET") or token_urlsafe(32),
+    https_only=getenv("ENVIRONMENT") == "production",
+    same_site="lax",
+)
 
 # Mount the static folder to serve JS and CSS files
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
