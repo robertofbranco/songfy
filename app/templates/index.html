@@ -3,39 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Songfy — Game setup</title>
+    <title>Songfy — Rooms</title>
     <link rel="stylesheet" href="../static/styles.css">
 </head>
 <body class="index-container">
-<main class="setup-page">
+<main class="setup-page room-home">
     <h1 class="title">SONGFY</h1>
-    <form id="game-setup-form" class="setup-panel">
-        <header class="setup-heading"><h2>Game setup</h2><p>Choose the music and rules, then add everyone who is playing.</p></header>
-        <section class="setup-section">
-            <h3>Playlist</h3>
-            <label for="playlist-input">Spotify playlist link <span class="optional">(optional)</span></label>
-            <input id="playlist-input" type="url" placeholder="https://open.spotify.com/playlist/…">
-            <p class="field-help">Leave blank to use the default playlist.</p>
-        </section>
-        <section class="setup-section">
-            <h3>Players</h3>
-            <div class="add-player-container"><input id="add-player-input" maxlength="20" placeholder="Player name" autocomplete="off"><button id="add-player-btn" type="button">Add</button></div>
-            <ul id="setup-player-list" class="setup-player-list" aria-live="polite"></ul>
-            <p id="players-error" class="validation-message" hidden>Add at least one player to start.</p>
-        </section>
-        <details class="setup-section settings-disclosure">
-            <summary>Game settings</summary>
-            <div class="settings-grid">
-                <label for="song-duration-input">Song duration <span><input id="song-duration-input" type="number" min="1" max="300" value="25" required> sec</span></label>
-                <label for="rounds-input">Number of rounds <input id="rounds-input" type="number" min="1" max="100" value="10" required></label>
-            </div>
-            <fieldset class="scoring-container"><legend>Scoring (points)</legend>
-                <label for="song-name-points-input">Song name <input id="song-name-points-input" type="number" min="0" max="100" value="1" required></label>
-                <label for="artist-points-input">Artist <input id="artist-points-input" type="number" min="0" max="100" value="1" required></label>
-                <label for="release-year-points-input">Release year <input id="release-year-points-input" type="number" min="0" max="100" value="1" required></label>
-            </fieldset>
-        </details>
-        <button id="start-game-btn" type="submit" class="primary-button">Start game</button>
+    <section class="setup-panel room-choice">
+        <h2>Create a room</h2>
+        <p>Start and control a game from this browser. Share the room code with spectators.</p>
+        {% if spotify_authenticated %}
+        <button id="create-room-btn" class="primary-button" type="button">Create room</button>
+        {% else %}
+        <a class="primary-button" href="/songfy/login?next=/songfy/">Sign in with Spotify to create</a>
+        {% endif %}
+        <p id="create-room-error" class="validation-message" hidden></p>
+    </section>
+    <form id="join-room-form" class="setup-panel room-choice">
+        <h2>Join a room</h2>
+        <p>Enter the six-character code shared by the host.</p>
+        <label for="room-code-input">Room code</label>
+        <input id="room-code-input" name="code" maxlength="6" autocomplete="off" required>
+        <button class="secondary-button" type="submit">Join room</button>
     </form>
 </main>
 <script src="../static/index.js"></script>

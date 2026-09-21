@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Songfy room {{ room_code }}</title>
+    <link rel="stylesheet" href="../../static/styles.css">
+</head>
+<body data-room-code="{{ room_code }}" data-is-host="{{ 'true' if is_host else 'false' }}">
+<main class="game-container room-page">
+    <header class="room-header">
+        <a href="/songfy/" class="secondary-button">Leave room</a>
+        <div><span>Room code</span><strong id="room-code">{{ room_code }}</strong></div>
+        <span id="room-role">{{ 'Host controls' if is_host else 'Spectator view' }}</span>
+    </header>
+    <p id="room-error" class="validation-message" hidden></p>
+    <section id="lobby" class="setup-panel">
+        <h1>Game lobby</h1>
+        <p id="lobby-status">Waiting for the host to configure the game.</p>
+        <form id="host-settings" hidden>
+            <label for="playlist-input">Spotify playlist link <span class="optional">(optional)</span></label>
+            <input id="playlist-input" type="url" placeholder="https://open.spotify.com/playlist/…">
+            <section class="setup-section">
+                <h3>Players</h3>
+                <div class="add-player-container"><input id="add-player-input" maxlength="20" placeholder="Player name"><button id="add-player-btn" type="button">Add</button></div>
+                <ul id="setup-player-list" class="setup-player-list"></ul>
+            </section>
+            <div class="settings-grid">
+                <label>Song duration <input id="song-duration-input" type="number" min="1" max="300" value="25"> sec</label>
+                <label>Rounds <input id="rounds-input" type="number" min="1" max="100" value="10"></label>
+                <label>Song name <input id="song-name-points-input" type="number" min="0" max="100" value="1"> pts</label>
+                <label>Artist <input id="artist-points-input" type="number" min="0" max="100" value="1"> pts</label>
+                <label>Release year <input id="release-year-points-input" type="number" min="0" max="100" value="1"> pts</label>
+            </div>
+            <button id="start-game-btn" class="primary-button" type="submit">Start game</button>
+        </form>
+        <ul id="spectator-player-list" class="setup-player-list"></ul>
+    </section>
+    <section id="game" class="gameplay-container" hidden>
+        <h1 id="round-header" class="round-header"></h1>
+        <p id="playback-status" role="status"></p>
+        <div id="host-controls" class="button-container" hidden>
+            <button id="play-btn" class="primary-button" type="button">Play excerpt</button>
+            <button id="reveal-btn" class="secondary-button" type="button">Reveal answer</button>
+        </div>
+        <section id="answer" class="info-container" hidden>
+            <p>Song: <span id="answer-name"></span></p><p>Artist: <span id="answer-artists"></span></p><p>Year: <span id="answer-year"></span></p>
+            <form id="award-form" hidden>
+                <label><input id="song-name-check" type="checkbox"> Song name</label><label><input id="artist-check" type="checkbox"> Artist</label><label><input id="year-check" type="checkbox"> Release year</label>
+                <button class="primary-button" type="submit">Award points</button>
+            </form>
+        </section>
+        <div id="scoreboard" class="players-container" aria-label="Scoreboard"></div>
+    </section>
+    <section id="finished" class="end-game-container" hidden><p class="end-game-eyebrow">Game complete</p><h1>Final rankings</h1><ol id="rankings-list" class="rankings-list"></ol></section>
+</main>
+<script src="../../static/room.js"></script>
+{% if is_host %}<script src="https://sdk.scdn.co/spotify-player.js" async></script>{% endif %}
+</body>
+</html>
