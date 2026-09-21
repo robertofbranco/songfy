@@ -12,7 +12,16 @@ function loadRoom() {
         <input id="playlist-input"><input id="rounds-input" value="3"><input id="song-duration-input" value="25"><input id="song-name-points-input" value="1"><input id="artist-points-input" value="2"><input id="release-year-points-input" value="3">
         <input id="add-player-input"><ul id="setup-player-list"></ul><ul id="spectator-player-list"></ul>
         </body>`, { url: 'http://localhost/songfy/rooms/ABC234', runScripts: 'outside-only' });
+    const addEventListener = dom.window.document.addEventListener.bind(
+        dom.window.document
+    );
+    dom.window.document.addEventListener = (type, listener, options) => {
+        if (type !== 'DOMContentLoaded') {
+            addEventListener(type, listener, options);
+        }
+    };
     dom.window.eval(roomScript);
+    dom.window.document.addEventListener = addEventListener;
     return dom;
 }
 
