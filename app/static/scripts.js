@@ -10,6 +10,7 @@ Non-priority:
 */
 
 const SONGS_API_PATH = '/songfy/get-songs';
+const SONG_START_POSITION_MS = 30_000;
 
 const params = new URLSearchParams(window.location.search);
 const playlistId = params.get('playlistId') ?? '';
@@ -28,7 +29,6 @@ const ARTIST_POINTS =
 const RELEASE_YEAR_POINTS =
     getIntegerSetting('releaseYearPoints', 1, 0, 100);
 
-let iFrameApi;
 let currentPlayer = 0;
 let currentRound = 1;
 
@@ -57,8 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tryStart();
 });
 
-window.onSpotifyIframeApiReady = IFrameAPI => {
-    iFrameApi = IFrameAPI;
+window.onSpotifyWebPlaybackSDKReady = () => {
     spotifyReady = true;
 
     tryStart();
@@ -77,15 +76,10 @@ async function start() {
     try {
         let counter = 0;
         let timeoutId;
-        let expectedSongUri;
-        let embedReady = false;
+        let deviceId;
         let waitingForPlaybackStart = false;
         let currentSongPlayed = false;
         let gameFinished = false;
-        let entityLoadFallbackId;
-        let playbackStartWatchdogId;
-        let pendingPlayRetryId;
-        let currentEntityReady = false;
 
         const songs = await getSongs();
 
@@ -93,204 +87,130 @@ async function start() {
             throw new Error('No songs were returned for this playlist.');
         }
 
-        finishSongLoading();
-
         let currentSong = songs[counter];
+        const playButton = document.getElementById('playBtn');
+        const nextButton = document.getElementById('nextBtn');
+        const player = new Spotify.Player({
+            name: 'Songfy',
+            getOAuthToken: callback => {
+                getSpotifyAccessToken().then(callback).catch(handleAuthError);
+            },
+            volume: 0.8
+        });
 
-        const element = document.getElementById('embed-iframe');
-        const options = {
-            width: '0',
-            height: '0',
-            uri: `spotify:track:${currentSong.id}`
-        };
+        player.addListener('ready', event => {
+            deviceId = event.device_id;
+            finishSongLoading();
+            togglePlayBtn(true);
+        });
 
-        const callback = EmbedController => {
-            const playButton = document.getElementById('playBtn');
-            const nextButton = document.getElementById('nextBtn');
+        player.addListener('not_ready', () => {
+            deviceId = undefined;
+            togglePlayBtn(false, 'Spotify disconnected');
+        });
 
-            expectedSongUri = `spotify:track:${currentSong.id}`;
-            togglePlayBtn(false, 'Loading...');
-
-            EmbedController.addListener('ready', () => {
-                embedReady = true;
-                markEntityReady(expectedSongUri);
+        for (const eventName of [
+            'initialization_error',
+            'authentication_error',
+            'account_error',
+            'playback_error'
+        ]) {
+            player.addListener(eventName, event => {
+                console.error(`Spotify ${eventName}:`, event.message);
+                togglePlayBtn(false, 'Spotify unavailable');
             });
+        }
 
-            EmbedController.addListener('playback_update', event => {
-                if (event.data?.playingURI === expectedSongUri) {
-                    markEntityReady(expectedSongUri);
-                }
-            });
+        player.addListener('player_state_changed', state => {
+            const expectedSongUri = `spotify:track:${currentSong.id}`;
 
-            EmbedController.addListener(
-                'playback_started',
-                event => {
-                    const playback = event.data;
+            if (
+                !state ||
+                !waitingForPlaybackStart ||
+                state.paused ||
+                state.track_window.current_track.uri !== expectedSongUri
+            ) {
+                return;
+            }
 
-                    if (
-                        !waitingForPlaybackStart ||
-                        playback?.playingURI !== expectedSongUri
-                    ) {
-                        return;
-                    }
+            waitingForPlaybackStart = false;
+            currentSongPlayed = true;
+            clearPlaybackTimeout();
+            togglePlayBtn(false, 'Playing...');
 
-                    waitingForPlaybackStart = false;
-                    currentSongPlayed = true;
-                    clearPendingPlayTimers();
-                    clearPlaybackTimeout();
-                    togglePlayBtn(false, 'Playing...');
+            timeoutId = setTimeout(async () => {
+                await player.pause();
+                playButton.innerText = 'Done';
+            }, SONG_PLAYBACK_DURATION_MS);
+        });
 
-                    timeoutId = setTimeout(() => {
-                        EmbedController.pause();
-                        playButton.innerText = 'Done';
-                    }, SONG_PLAYBACK_DURATION_MS);
-                }
-            );
+        playButton.addEventListener('click', async () => {
+            if (
+                !deviceId ||
+                waitingForPlaybackStart ||
+                currentSongPlayed ||
+                gameFinished
+            ) {
+                return;
+            }
 
-            playButton.addEventListener('click', () => {
-                if (
-                    !embedReady ||
-                    !currentEntityReady ||
-                    waitingForPlaybackStart ||
-                    currentSongPlayed ||
-                    gameFinished
-                ) {
-                    return;
-                }
+            clearPlaybackTimeout();
+            waitingForPlaybackStart = true;
+            togglePlayBtn(false, 'Starting...');
 
-                clearPlaybackTimeout();
-                clearPendingPlayTimers();
-
-                waitingForPlaybackStart = true;
-                togglePlayBtn(false, 'Starting...');
-
-                attemptPlayback();
-            });
-
-            nextButton.addEventListener('click', () => {
-                clearPlaybackTimeout();
-                clearEntityLoadTimer();
-                clearPendingPlayTimers();
-
-                waitingForPlaybackStart = false;
-                currentSongPlayed = false;
-
-                EmbedController.pause();
-
-                document.getElementById('nameSpan').innerText =
-                    currentSong.name;
-
-                document.getElementById('artistsSpan').innerText =
-                    currentSong.artists.join(', ');
-
-                document.getElementById('releaseSpan').innerText =
-                    currentSong.yearReleased;
-
-                counter++;
-
-                if (counter >= songs.length) {
-                    gameFinished = true;
-                    finalTurnPending = true;
-                    expectedSongUri = undefined;
-                    togglePlayBtn(false, 'No more songs');
-                    nextButton.disabled = true;
-                    toggleDisplayedContainer();
-                    return;
-                }
-
-                currentSong = songs[counter];
-                expectedSongUri = `spotify:track:${currentSong.id}`;
-                beginEntityLoading(expectedSongUri);
-
-                EmbedController.loadEntity(
-                    expectedSongUri,
-                    false,
-                    30
+            try {
+                await player.activateElement();
+                await startSpotifyPlayback(
+                    deviceId,
+                    `spotify:track:${currentSong.id}`
                 );
+            } catch (error) {
+                console.error('Failed to start Spotify playback:', error);
+                waitingForPlaybackStart = false;
+                togglePlayBtn(true, undefined, 'Retry');
+            }
+        });
 
+        nextButton.addEventListener('click', async () => {
+            clearPlaybackTimeout();
+            waitingForPlaybackStart = false;
+            currentSongPlayed = false;
+            await player.pause();
+
+            document.getElementById('nameSpan').innerText = currentSong.name;
+            document.getElementById('artistsSpan').innerText =
+                currentSong.artists.join(', ');
+            document.getElementById('releaseSpan').innerText =
+                currentSong.yearReleased;
+
+            counter++;
+
+            if (counter >= songs.length) {
+                gameFinished = true;
+                finalTurnPending = true;
+                togglePlayBtn(false, 'No more songs');
+                nextButton.disabled = true;
                 toggleDisplayedContainer();
-            });
-
-            function clearEntityLoadTimer() {
-                if (entityLoadFallbackId) {
-                    clearTimeout(entityLoadFallbackId);
-                    entityLoadFallbackId = undefined;
-                }
+                return;
             }
 
-            function clearPendingPlayTimers() {
-                if (pendingPlayRetryId) {
-                    clearTimeout(pendingPlayRetryId);
-                    pendingPlayRetryId = undefined;
-                }
+            currentSong = songs[counter];
+            togglePlayBtn(true);
+            toggleDisplayedContainer();
+        });
 
-                if (playbackStartWatchdogId) {
-                    clearTimeout(playbackStartWatchdogId);
-                    playbackStartWatchdogId = undefined;
-                }
+        function clearPlaybackTimeout() {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = undefined;
             }
+        }
 
-            function markEntityReady(songUri) {
-                if (songUri !== expectedSongUri || gameFinished) {
-                    return;
-                }
+        const connected = await player.connect();
 
-                clearEntityLoadTimer();
-                currentEntityReady = true;
-
-                if (!waitingForPlaybackStart && !currentSongPlayed) {
-                    togglePlayBtn(true);
-                }
-            }
-
-            function beginEntityLoading(songUri) {
-                clearEntityLoadTimer();
-                clearPendingPlayTimers();
-                currentEntityReady = false;
-                togglePlayBtn(false, 'Loading...');
-
-                entityLoadFallbackId = setTimeout(() => {
-                    markEntityReady(songUri);
-                }, 1_500);
-            }
-
-            function attemptPlayback() {
-                const songUri = expectedSongUri;
-
-                EmbedController.play();
-
-                pendingPlayRetryId = setTimeout(() => {
-                    if (
-                        waitingForPlaybackStart &&
-                        !currentSongPlayed &&
-                        songUri === expectedSongUri
-                    ) {
-                        EmbedController.play();
-                    }
-                }, 1_500);
-
-                playbackStartWatchdogId = setTimeout(() => {
-                    if (
-                        waitingForPlaybackStart &&
-                        !currentSongPlayed &&
-                        songUri === expectedSongUri
-                    ) {
-                        waitingForPlaybackStart = false;
-                        clearPendingPlayTimers();
-                        togglePlayBtn(true);
-                    }
-                }, 6_000);
-            }
-
-            function clearPlaybackTimeout() {
-                if (timeoutId) {
-                    clearTimeout(timeoutId);
-                    timeoutId = undefined;
-                }
-            }
-        };
-
-        iFrameApi.createController(element, options, callback);
+        if (!connected) {
+            throw new Error('Spotify Web Playback SDK could not connect.');
+        }
     } catch (error) {
         console.error('Failed to start the game:', error);
         finishSongLoading(false);
@@ -314,11 +234,57 @@ function finishSongLoading(enableControls = true) {
     }
 }
 
-function togglePlayBtn(enabled, disabledText = 'Playing...') {
+function togglePlayBtn(
+    enabled,
+    disabledText = 'Playing...',
+    enabledText = 'Play'
+) {
     const playBtn = document.getElementById('playBtn');
 
     playBtn.disabled = !enabled;
-    playBtn.innerText = enabled ? 'Play' : disabledText;
+    playBtn.innerText = enabled ? enabledText : disabledText;
+}
+
+async function getSpotifyAccessToken() {
+    const response = await fetch('/songfy/auth/token');
+
+    if (response.status === 401) {
+        window.location.replace('/songfy/login');
+        throw new Error('Spotify login expired.');
+    }
+
+    if (!response.ok) {
+        throw new Error(`Spotify token request failed: ${response.status}`);
+    }
+
+    return (await response.json()).access_token;
+}
+
+async function startSpotifyPlayback(deviceId, songUri) {
+    const accessToken = await getSpotifyAccessToken();
+    const response = await fetch(
+        `https://api.spotify.com/v1/me/player/play?device_id=${encodeURIComponent(deviceId)}`,
+        {
+            method: 'PUT',
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                uris: [songUri],
+                position_ms: SONG_START_POSITION_MS
+            })
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error(`Spotify playback failed: ${response.status}`);
+    }
+}
+
+function handleAuthError(error) {
+    console.error('Spotify authentication failed:', error);
+    window.location.replace('/songfy/login');
 }
 
 async function getSongs() {

@@ -84,6 +84,39 @@ describe('game settings', () => {
     });
 });
 
+describe('Spotify Premium playback', () => {
+    it('starts each song at 30 seconds on the SDK device', async () => {
+        const dom = loadGame();
+        const requests = [];
+        dom.window.fetch = async (url, options) => {
+            requests.push([url, options]);
+
+            if (url === '/songfy/auth/token') {
+                return {
+                    ok: true,
+                    status: 200,
+                    json: async () => ({ access_token: 'access-token' })
+                };
+            }
+
+            return { ok: true, status: 204 };
+        };
+
+        await dom.window.startSpotifyPlayback(
+            'browser-device',
+            'spotify:track:second-song'
+        );
+
+        expect(requests[1][0]).toContain('device_id=browser-device');
+        expect(requests[1][1].headers.Authorization)
+            .toBe('Bearer access-token');
+        expect(JSON.parse(requests[1][1].body)).toEqual({
+            uris: ['spotify:track:second-song'],
+            position_ms: 30000
+        });
+    });
+});
+
 describe('turn scoring', () => {
     it('awards points, advances the player, and announces the result', () => {
         const dom = loadGame(
