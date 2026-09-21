@@ -8,17 +8,18 @@ Live app: https://playlist-fperg0hccngddwep.polandcentral-01.azurewebsites.net/s
 
 ## Playing the game
 
-1. Sign in with a Spotify Premium account when prompted.
-2. Optionally paste a Spotify playlist link. Leaving it blank uses the default playlist.
-3. Add every player taking part.
-4. Optionally configure the song duration, number of rounds, and points awarded for each answer.
-5. Select **Start game**.
-6. Follow the round header to see whose turn it is, then select **Play** to hear the excerpt, starting 30 seconds into the track.
-7. Select **Reveal answer**, mark each correct answer, and select **Award points**.
+1. Sign in with a Spotify Premium account, then create a room and share its code.
+2. Spectators can join anonymously with the code and see live game information.
+3. The host configures the playlist, players, duration, rounds, and scoring, then starts the game.
+4. Only the host can play excerpts, reveal answers, and award points.
 
 The scoreboard highlights the current player and a brief message reports the points
 earned after every turn. When all rounds are complete, Songfy displays the final
 rankings and each player's total points. Select **Play again** to return to game setup.
+
+Rooms are held only in the running application process. They expire after two hours
+without host activity and are also lost when the app restarts, deploys, or scales out.
+Run the Azure App Service with one worker/instance, WebSockets enabled, and Always On.
 
 ## Run locally
 

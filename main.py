@@ -4,8 +4,10 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from os import getenv
 from secrets import token_urlsafe
+import asyncio
 import uvicorn
 import app.songfy as songfy
+from app.rooms import room_manager
 
 app = FastAPI()
 
@@ -29,3 +31,18 @@ app.add_middleware(
 )
 
 app.include_router(songfy.router)
+
+
+@app.on_event("startup")
+async def start_room_cleanup() -> None:
+    async def cleanup_rooms() -> None:
+        while True:
+            await asyncio.sleep(300)
+            await room_manager.cleanup_expired()
+
+    app.state.room_cleanup_task = asyncio.create_task(cleanup_rooms())
+
+
+@app.on_event("shutdown")
+async def stop_room_cleanup() -> None:
+    app.state.room_cleanup_task.cancel()
