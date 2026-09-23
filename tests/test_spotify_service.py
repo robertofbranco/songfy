@@ -124,3 +124,6 @@ def test_get_songs_uses_requested_playlist():
             get_songs(songCount=12, playlistId="custom-playlist")
         )
 
+    get_playlist_songs.assert_awaited_once_with("custom-playlist", 12)
+    assert result == []
+

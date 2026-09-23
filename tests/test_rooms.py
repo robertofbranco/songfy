@@ -40,6 +40,29 @@ def test_spectator_snapshot_hides_unrevealed_song_and_host_track():
     assert manager.snapshot(room)["answer"]["name"] == "Hidden"
 
 
+def test_room_broadcast_sends_each_connection_its_own_role():
+    class Socket:
+        def __init__(self):
+            self.messages = []
+
+        async def send_json(self, message):
+            self.messages.append(message)
+
+    async def broadcast_room():
+        manager = RoomManager()
+        room = await manager.create("host")
+        host_socket = Socket()
+        spectator_socket = Socket()
+        room.sockets = {host_socket: True, spectator_socket: False}
+        await manager.broadcast(room)
+        return host_socket.messages[0], spectator_socket.messages[0]
+
+    host_message, spectator_message = asyncio.run(broadcast_room())
+
+    assert host_message["room"]["isHost"] is True
+    assert spectator_message["room"]["isHost"] is False
+
+
 def test_only_creator_browser_can_control_room():
     async def assert_owner():
         manager = RoomManager()
