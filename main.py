@@ -1,3 +1,8 @@
+from dotenv import load_dotenv
+
+# Load local development variables before importing modules that read settings.
+load_dotenv()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -5,7 +10,6 @@ from starlette.middleware.sessions import SessionMiddleware
 from os import getenv
 from secrets import token_urlsafe
 import asyncio
-import uvicorn
 import app.songfy as songfy
 from app.rooms import room_manager
 

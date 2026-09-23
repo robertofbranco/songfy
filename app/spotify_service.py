@@ -3,8 +3,6 @@ import random
 
 from spotipy import Spotify, SpotifyClientCredentials
 from app.song import Song
-from dotenv import load_dotenv
-load_dotenv()
 
 
 class SpotifyService:

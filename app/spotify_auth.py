@@ -2,8 +2,10 @@ from os import getenv
 from secrets import token_urlsafe
 
 from fastapi import HTTPException, Request
-from spotipy import Spotify, SpotifyOAuth
+from requests import RequestException
+from spotipy import Spotify, SpotifyException, SpotifyOAuth
 from spotipy.cache_handler import MemoryCacheHandler
+from spotipy.oauth2 import SpotifyOauthError
 
 
 class SpotifyAuth:
@@ -46,14 +48,39 @@ class SpotifyAuth:
         if not expected_state or state != expected_state:
             raise HTTPException(status_code=400, detail="Invalid OAuth state.")
 
-        token_info = self.oauth.get_access_token(
-            code,
-            check_cache=False,
-            as_dict=True,
-        )
-        profile = Spotify(auth=token_info["access_token"]).current_user()
+        try:
+            token_info = self.oauth.get_access_token(
+                code,
+                check_cache=False,
+                as_dict=True,
+            )
+            profile = Spotify(auth=token_info["access_token"]).current_user()
+        except SpotifyOauthError as exc:
+            self.cache.save_token_to_cache(None)
+            raise HTTPException(
+                status_code=400,
+                detail="Spotify authorization failed. Start the sign-in again.",
+            ) from exc
+        except SpotifyException as exc:
+            self.cache.save_token_to_cache(None)
+            raise HTTPException(
+                status_code=502,
+                detail=(
+                    "Spotify rejected the profile request. Check that this account "
+                    "is allowed to use the app, then sign in again."
+                ),
+            ) from exc
+        except (RequestException, KeyError, TypeError) as exc:
+            self.cache.save_token_to_cache(None)
+            raise HTTPException(
+                status_code=502,
+                detail="Spotify authentication is temporarily unavailable.",
+            ) from exc
 
-        if profile.get("product") != "premium":
+        # Development Mode no longer returns the subscription product field as
+        # of Spotify's February 2026 API changes. The Web Playback SDK still
+        # enforces Premium access, so only reject an explicit non-Premium value.
+        if profile.get("product") not in (None, "premium"):
             self.cache.save_token_to_cache(None)
             raise HTTPException(
                 status_code=403,
