@@ -35,6 +35,7 @@ CLIENT_ID=your_spotify_client_id
 CLIENT_SECRET=your_spotify_client_secret
 REDIRECT_URI=http://127.0.0.1:8000/songfy/auth/callback
 SESSION_SECRET=a-long-random-secret
+ENVIRONMENT=development
 ```
 
 Add that exact redirect URI to the allowlist for your app in the Spotify
@@ -49,7 +50,9 @@ python3 -m venv .venv
 .venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
-Open http://localhost:8000/songfy/.
+Open http://127.0.0.1:8000/songfy/. Do not use `localhost`: its browser
+session cookie is separate from `127.0.0.1`, which would invalidate Spotify's
+OAuth state check.
 
 ## Tests
 
@@ -67,6 +70,7 @@ Run both suites:
 npm test
 ```
 
-The backend suite tests Spotify playlist mapping, duplicate removal, and playlist
-selection in the API. The frontend suite tests settings validation, configured point
-labels, scoring and turn progression, result messages, final rankings, and shuffling.
+The backend suite tests Spotify authentication and playlist mapping, room ownership,
+validation, WebSockets, and the complete game lifecycle. The frontend suite exercises
+the active room and home-page templates, event wiring, settings, live updates,
+Spotify playback requests, scoring, error handling, and final rankings.
