@@ -37,7 +37,7 @@ class Room:
     playback_status: str = "ready"
     revealed: bool = False
     last_host_activity: float = field(default_factory=time.monotonic)
-    sockets: set[WebSocket] = field(default_factory=set)
+    sockets: dict[WebSocket, bool] = field(default_factory=dict)
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
 
 
@@ -99,7 +99,7 @@ class RoomManager:
             "revealed": room.revealed,
         }
 
-        if room.revealed and room.songs:
+        if room.revealed and room.songs and room.song_index < len(room.songs):
             song = room.songs[room.song_index]
             state["answer"] = {
                 "name": song.name,
@@ -116,17 +116,16 @@ class RoomManager:
         return state
 
     async def broadcast(self, room: Room) -> None:
-        payload = {"type": "room_state", "room": self.snapshot(room)}
         stale_sockets: list[WebSocket] = []
 
-        for socket in list(room.sockets):
+        for socket, is_host in list(room.sockets.items()):
             try:
-                await socket.send_json(payload)
+                await socket.send_json({"type": "room_state", "room": self.snapshot(room, is_host=is_host)})
             except Exception:
                 stale_sockets.append(socket)
 
         for socket in stale_sockets:
-            room.sockets.discard(socket)
+            room.sockets.pop(socket, None)
 
     async def remove(self, code: str, reason: str = "room_expired") -> None:
         async with self.lock:

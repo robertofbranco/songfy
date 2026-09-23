@@ -16,41 +16,59 @@
     <p id="room-error" class="validation-message" hidden></p>
     <section id="lobby" class="setup-panel">
         <h1>Game lobby</h1>
-        <p id="lobby-status">Waiting for the host to configure the game.</p>
-        <form id="host-settings" hidden>
-            <label for="playlist-input">Spotify playlist link <span class="optional">(optional)</span></label>
-            <input id="playlist-input" type="url" placeholder="https://open.spotify.com/playlist/…">
+        <p id="lobby-status">{{ 'Configure the game, then share the room code with spectators.' if is_host else 'Waiting for the host to start the game.' }}</p>
+        <form id="host-settings"{% if not is_host %} hidden{% endif %}>
+            <div class="playlist-field">
+                <label for="playlist-input">Spotify playlist link <span class="optional">(optional)</span></label>
+                <input id="playlist-input" type="url" placeholder="https://open.spotify.com/playlist/…">
+            </div>
             <section class="setup-section">
                 <h3>Players</h3>
                 <div class="add-player-container"><input id="add-player-input" maxlength="20" placeholder="Player name"><button id="add-player-btn" type="button">Add</button></div>
                 <ul id="setup-player-list" class="setup-player-list"></ul>
             </section>
-            <div class="settings-grid">
-                <label>Song duration <input id="song-duration-input" type="number" min="1" max="300" value="25"> sec</label>
-                <label>Rounds <input id="rounds-input" type="number" min="1" max="100" value="10"></label>
-                <label>Song name <input id="song-name-points-input" type="number" min="0" max="100" value="1"> pts</label>
-                <label>Artist <input id="artist-points-input" type="number" min="0" max="100" value="1"> pts</label>
-                <label>Release year <input id="release-year-points-input" type="number" min="0" max="100" value="1"> pts</label>
-            </div>
+            <details class="settings-disclosure">
+                <summary>Game settings</summary>
+                <div class="settings-grid">
+                    <label for="song-duration-input"><span>Song duration</span><span class="setting-control"><input id="song-duration-input" type="number" min="1" max="300" value="25"><span class="setting-unit">sec</span></span></label>
+                    <label for="rounds-input"><span>Rounds</span><span class="setting-control"><input id="rounds-input" type="number" min="1" max="100" value="10"><span class="setting-unit" aria-hidden="true"></span></span></label>
+                    <label for="song-name-points-input"><span>Song name</span><span class="setting-control"><input id="song-name-points-input" type="number" min="0" max="100" value="1"><span class="setting-unit">pts</span></span></label>
+                    <label for="artist-points-input"><span>Artist</span><span class="setting-control"><input id="artist-points-input" type="number" min="0" max="100" value="1"><span class="setting-unit">pts</span></span></label>
+                    <label for="release-year-points-input"><span>Release year</span><span class="setting-control"><input id="release-year-points-input" type="number" min="0" max="100" value="1"><span class="setting-unit">pts</span></span></label>
+                </div>
+            </details>
             <button id="start-game-btn" class="primary-button" type="submit">Start game</button>
+            <p id="start-game-status" class="start-game-status" role="status" hidden>Loading songs and starting the game…</p>
         </form>
         <ul id="spectator-player-list" class="setup-player-list"></ul>
     </section>
     <section id="game" class="gameplay-container" hidden>
-        <h1 id="round-header" class="round-header"></h1>
-        <p id="playback-status" role="status"></p>
-        <div id="host-controls" class="button-container" hidden>
-            <button id="play-btn" class="primary-button" type="button">Play excerpt</button>
-            <button id="reveal-btn" class="secondary-button" type="button">Reveal answer</button>
+        <div class="game-stage">
+            <div class="game-stage-header">
+                <p class="game-stage-eyebrow">Now playing</p>
+                <h1 id="round-header" class="round-header"></h1>
+                <p id="playback-status" role="status"></p>
+            </div>
+            <section id="host-controls" class="button-container action-panel" aria-label="Host controls" hidden>
+                <button id="play-btn" class="primary-button" type="button">Play excerpt</button>
+                <button id="reveal-btn" class="secondary-button" type="button">Reveal answer</button>
+            </section>
+            <section id="answer" class="info-container answer-panel" aria-live="polite" hidden>
+                <div class="answer-details">
+                    <p>Song <span id="answer-name"></span></p>
+                    <p>Artist <span id="answer-artists"></span></p>
+                    <p>Year <span id="answer-year"></span></p>
+                </div>
+                <form id="award-form" hidden>
+                    <label><input id="song-name-check" type="checkbox"> Song name</label><label><input id="artist-check" type="checkbox"> Artist</label><label><input id="year-check" type="checkbox"> Release year</label>
+                    <button class="primary-button" type="submit">Award points</button>
+                </form>
+            </section>
         </div>
-        <section id="answer" class="info-container" hidden>
-            <p>Song: <span id="answer-name"></span></p><p>Artist: <span id="answer-artists"></span></p><p>Year: <span id="answer-year"></span></p>
-            <form id="award-form" hidden>
-                <label><input id="song-name-check" type="checkbox"> Song name</label><label><input id="artist-check" type="checkbox"> Artist</label><label><input id="year-check" type="checkbox"> Release year</label>
-                <button class="primary-button" type="submit">Award points</button>
-            </form>
-        </section>
-        <div id="scoreboard" class="players-container" aria-label="Scoreboard"></div>
+        <aside class="score-panel" aria-label="Scoreboard">
+            <div class="score-panel-heading"><span>Scoreboard</span><span class="score-panel-caption">Live scores</span></div>
+            <div id="scoreboard" class="players-container"></div>
+        </aside>
     </section>
     <section id="finished" class="end-game-container" hidden><p class="end-game-eyebrow">Game complete</p><h1>Final rankings</h1><ol id="rankings-list" class="rankings-list"></ol></section>
 </main>

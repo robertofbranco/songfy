@@ -6,7 +6,10 @@ document.addEventListener('DOMContentLoaded', () => {
 async function createRoom() {
     const error = document.getElementById('create-room-error');
     try {
-        const response = await fetch('/songfy/api/rooms', { method: 'POST' });
+        const response = await fetch('/songfy/api/rooms', {
+            method: 'POST',
+            credentials: 'same-origin',
+        });
         if (response.status === 401) {
             window.location.assign('/songfy/login?next=/songfy/');
             return;

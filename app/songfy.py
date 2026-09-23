@@ -1,8 +1,10 @@
 from fastapi import APIRouter, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from os import getenv
 from pydantic import BaseModel
 from secrets import token_urlsafe
+from urllib.parse import urlsplit
 from app.spotify_auth import spotify_auth
 from app.rooms import Room, room_manager
 from app.spotify_service import SpotifyService
@@ -73,6 +75,33 @@ def require_spotify_host(request: Request) -> None:
         raise HTTPException(status_code=401, detail="Spotify Premium login required.")
 
 
+def require_matching_local_oauth_origin(request: Request) -> None:
+    redirect_uri = getenv("REDIRECT_URI", "")
+    configured = urlsplit(redirect_uri)
+
+    # Spotify permits HTTP only for loopback development callbacks. The browser
+    # session cookie is host-specific, so localhost and 127.0.0.1 cannot be mixed.
+    if configured.scheme != "http":
+        return
+
+    if getenv("ENVIRONMENT") == "production":
+        raise HTTPException(
+            status_code=500,
+            detail="Set ENVIRONMENT=development when using a local HTTP redirect URI.",
+        )
+
+    expected_origin = f"{configured.scheme}://{configured.netloc}"
+    request_origin = str(request.base_url).rstrip("/")
+    if request_origin != expected_origin:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Local OAuth must start from the same origin as REDIRECT_URI. "
+                f"Open {expected_origin}/songfy/ instead."
+            ),
+        )
+
+
 async def host_room(request: Request, code: str) -> Room:
     require_spotify_host(request)
     return await room_manager.require_host(code, browser_id(request))
@@ -80,6 +109,9 @@ async def host_room(request: Request, code: str) -> Room:
 
 @router.get("/")
 async def read_root(request: Request):
+    # Establish the room-owner identity before the first create-room request.
+    # This avoids the create response and room navigation racing to persist it.
+    browser_id(request)
     return templates.TemplateResponse(
         request=request,
         name="index.html",
@@ -109,6 +141,7 @@ async def join_room(code: str = ""):
 
 @router.get("/login")
 async def login(request: Request, next: str = "/songfy/"):
+    require_matching_local_oauth_origin(request)
     if not next.startswith("/songfy/"):
         next = "/songfy/"
     request.session["spotify_login_next"] = next
@@ -262,6 +295,7 @@ async def award_points(request: Request, code: str, award: AwardInput):
         if room.song_index >= len(room.songs):
             room.status = "finished"
             room.playback_status = "finished"
+            room.revealed = False
         else:
             room.current_player_index = (room.current_player_index + 1) % len(room.settings["players"])
             if room.current_player_index == 0:
@@ -294,9 +328,10 @@ async def room_websocket(websocket: WebSocket, code: str):
         return
 
     await websocket.accept()
+    is_host = room.owner_browser_id == websocket.session.get("browser_id")
     async with room.lock:
-        room.sockets.add(websocket)
-    await websocket.send_json({"type": "room_state", "room": room_manager.snapshot(room)})
+        room.sockets[websocket] = is_host
+    await websocket.send_json({"type": "room_state", "room": room_manager.snapshot(room, is_host=is_host)})
 
     try:
         while True:
@@ -304,7 +339,7 @@ async def room_websocket(websocket: WebSocket, code: str):
     except WebSocketDisconnect:
         pass
     finally:
-        room.sockets.discard(websocket)
+        room.sockets.pop(websocket, None)
 
 
 @router.get("/get-songs")

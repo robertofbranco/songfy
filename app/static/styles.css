@@ -491,4 +491,286 @@ button:not(:disabled):hover {
 .room-page { max-width: 52rem; margin: 0 auto; }
 .room-page .setup-panel, .room-page .gameplay-container { margin: 1rem auto; }
 .room-page #award-form { display: grid; gap: .5rem; margin-top: 1rem; }
- (max-width: 599px) { .setup-panel { padding: 1rem; } .settings-grid label, .scoring-container label { grid-template-columns: minmax(0, 1fr) 7rem; } }
+@media (max-width: 599px) { .setup-panel { padding: 1rem; } .settings-grid label, .scoring-container label { grid-template-columns: minmax(0, 1fr) 7rem; } }
+
+/* Room experience: a stable, warm game board. */
+:root {
+    --color-background: #F8F4E1;
+    --color-surface: #FFFDF5;
+    --color-primary: #74512D;
+    --color-primary-dark: #4E1F00;
+    --color-accent: #FEBA17;
+    --color-text: #3B2A1A;
+    --color-border: #C8B89F;
+    --color-disabled: #D8CEBD;
+    --color-disabled-text: #6F6559;
+    --color-danger: #A33A2B;
+    --color-shadow: rgba(78, 31, 0, .14);
+}
+
+body {
+    box-sizing: border-box;
+    height: auto;
+    min-height: 100vh;
+    margin: 0;
+    align-items: flex-start;
+    background: var(--color-background);
+    color: var(--color-text);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button, input { font: inherit; }
+button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 3px; }
+
+.room-home {
+    box-sizing: border-box;
+    display: grid;
+    width: min(52rem, calc(100% - 2rem));
+    gap: 1rem;
+    padding: 3rem 0;
+}
+.room-home .title {
+    margin: 0 0 .75rem;
+    color: var(--color-text);
+    font-size: clamp(3rem, 10vw, 6rem);
+    letter-spacing: -.08em;
+    line-height: .9;
+    text-align: left;
+}
+.room-home .title::after {
+    display: block;
+    width: 3.5rem;
+    height: .35rem;
+    margin-top: 1rem;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+    content: "";
+}
+.room-choice {
+    box-sizing: border-box;
+    width: 100%;
+    padding: clamp(1.25rem, 4vw, 2rem);
+    border: 1px solid var(--color-border);
+    border-radius: 1.25rem;
+    background: var(--color-surface);
+    box-shadow: 0 1.5rem 4rem var(--color-shadow);
+}
+.room-choice h2 { margin: 0; color: var(--color-text); font-size: 1.35rem; }
+.room-choice p { margin: -.35rem 0 .25rem; color: var(--color-disabled-text); line-height: 1.55; }
+.room-choice .primary-button, .room-choice .secondary-button { width: 100%; text-align: center; text-decoration: none; }
+.room-choice a.primary-button {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 3rem;
+}
+
+.room-page {
+    box-sizing: border-box;
+    width: min(70rem, calc(100% - 2rem));
+    max-width: none;
+    margin: 0 auto;
+    padding: 1.5rem 0 3rem;
+}
+.room-header {
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    width: 100%;
+    max-width: none;
+    margin: 0 0 1rem;
+    padding: .8rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 1rem;
+    background: var(--color-surface);
+    box-shadow: 0 .75rem 2rem var(--color-shadow);
+}
+.room-header > div { text-align: center; }
+.room-header > div span, #room-role { color: var(--color-disabled-text); font-size: .7rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.room-header strong { display: block; color: var(--color-primary); font-size: 1.3rem; letter-spacing: .2em; }
+#room-role { justify-self: end; }
+.room-header .secondary-button { justify-self: start; padding: .55rem .8rem; font-size: .8rem; }
+
+.room-page .setup-panel, .room-page .gameplay-container {
+    box-sizing: border-box;
+    width: 100%;
+    margin: 0 0 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 1.25rem;
+    background: var(--color-surface);
+    box-shadow: 0 1rem 3rem var(--color-shadow);
+}
+.room-page .setup-panel[hidden], .room-page .gameplay-container[hidden] { display: none; }
+.room-page .setup-panel { padding: clamp(1.25rem, 4vw, 2rem); }
+.room-page .setup-panel h1 { margin: 0; font-size: clamp(1.6rem, 4vw, 2.2rem); }
+.room-page .setup-panel p { color: var(--color-disabled-text); }
+.room-page #host-settings { display: grid; gap: 1.25rem; }
+.room-page #host-settings[hidden] { display: none; }
+.room-page .playlist-field { display: grid; gap: .45rem; }
+.room-page input { border-color: var(--color-border); background: var(--color-surface); color: var(--color-text); }
+.room-page .setup-section { border-color: var(--color-border); }
+.room-page .setup-player-list li { border-color: var(--color-border); background: rgba(255,255,255,.025); }
+.room-page .setup-player-list button { color: var(--color-danger); }
+.room-page #add-player-input.is-invalid {
+    border-color: var(--color-danger);
+    border-right: 1px solid var(--color-danger);
+    box-shadow: 0 0 0 2px rgba(163,58,43,.15);
+}
+.room-page .settings-disclosure {
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: .8rem;
+    background: rgba(255,255,255,.32);
+}
+.room-page .settings-disclosure summary {
+    padding: .9rem 1rem;
+    color: var(--color-text);
+    font-size: 1rem;
+    list-style-position: inside;
+    transition: background-color .2s ease;
+}
+.room-page .settings-disclosure summary:hover { background: rgba(200,184,159,.18); }
+.room-page .settings-disclosure[open] summary {
+    margin: 0;
+    border-bottom: 1px solid var(--color-border);
+}
+.room-page .settings-grid { gap: 0; padding: .25rem 1rem; }
+.room-page .settings-grid label {
+    grid-template-columns: minmax(0, 1fr) minmax(7.5rem, auto);
+    min-height: 3.35rem;
+    border-bottom: 1px solid rgba(200,184,159,.55);
+}
+.room-page .settings-grid label:last-child { border-bottom: 0; }
+.room-page .setting-control { justify-content: flex-end; }
+.room-page .setting-control input { width: 5.25rem; }
+.room-page .setting-unit {
+    width: 2.1rem;
+    color: var(--color-disabled-text);
+    font-size: .8rem;
+}
+.room-page .start-game-status {
+    align-items: center;
+    gap: .55rem;
+    margin: -.5rem 0 0;
+    color: var(--color-disabled-text);
+    font-size: .9rem;
+}
+.room-page .start-game-status:not([hidden]) { display: flex; }
+.room-page .start-game-status::before {
+    width: .85rem;
+    height: .85rem;
+    border: 2px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: room-loading-spin .75s linear infinite;
+    content: "";
+}
+@keyframes room-loading-spin { to { transform: rotate(360deg); } }
+
+.room-page .gameplay-container {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(17rem, .8fr);
+    gap: clamp(1rem, 2vw, 1.75rem);
+    padding: clamp(1.25rem, 4vw, 2rem);
+    align-items: stretch;
+}
+.room-page .game-stage {
+    display: grid;
+    grid-template-rows: auto minmax(6.5rem, auto) minmax(13rem, 1fr);
+    gap: .9rem;
+    min-width: 0;
+    max-width: none;
+}
+.room-page .game-stage-header { padding: .25rem .2rem .45rem; }
+.room-page .game-stage-eyebrow {
+    margin: 0 0 .35rem;
+    color: var(--color-primary);
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+}
+.room-page #round-header { margin: 0; text-align: left; color: var(--color-text); font-size: clamp(1.5rem, 4vw, 2.35rem); letter-spacing: -.035em; }
+.room-page #playback-status { margin: .45rem 0 0; color: var(--color-disabled-text); font-size: .92rem; }
+.room-page .button-container {
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: .75rem;
+    min-width: 0;
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 1rem;
+    background: linear-gradient(135deg, rgba(248, 244, 225, .88), rgba(255, 253, 245, .75));
+}
+.room-page .button-container[hidden] {
+    display: grid;
+    position: relative;
+    visibility: visible;
+    pointer-events: none;
+}
+.room-page .button-container[hidden] > * { visibility: hidden; }
+.room-page .button-container[hidden]::after {
+    align-self: center;
+    color: var(--color-disabled-text);
+    content: "Waiting for the host to play the excerpt";
+    font-size: .92rem;
+    text-align: center;
+}
+body[data-is-host="false"] .room-page .button-container[hidden] { display: none; }
+.room-page .button-container button { width: 100%; min-height: 4.5rem; }
+.room-page #answer {
+    box-sizing: border-box;
+    display: grid;
+    align-content: start;
+    min-height: 13rem;
+    padding: 1.2rem;
+    border: 1px solid var(--color-border);
+    border-radius: 1rem;
+    background: linear-gradient(135deg, rgba(248, 244, 225, .88), rgba(255, 253, 245, .75));
+}
+.room-page #answer[hidden] { display: grid; position: relative; visibility: visible; pointer-events: none; }
+.room-page #answer[hidden] > * { visibility: hidden; }
+.room-page #answer[hidden]::after {
+    align-self: center;
+    color: var(--color-disabled-text);
+    content: "The answer will appear here when it is revealed";
+    font-size: .98rem;
+    line-height: 1.5;
+    text-align: center;
+}
+.room-page .answer-details { display: grid; gap: .65rem; }
+.room-page #answer p { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); gap: .75rem; margin: 0; color: var(--color-disabled-text); font-size: .82rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+.room-page #answer span { color: var(--color-text); font-size: 1rem; font-weight: 700; letter-spacing: normal; text-transform: none; }
+.room-page #award-form { display: grid; gap: .65rem; margin-top: 1rem; }
+.room-page #award-form[hidden] { display: none; }
+.room-page #award-form label { padding: .65rem .75rem; border: 1px solid var(--color-border); border-radius: .65rem; background: rgba(255,255,255,.58); }
+.room-page #award-form button { width: 100%; margin-top: .25rem; }
+.room-page .score-panel { box-sizing: border-box; display: grid; align-content: start; gap: .9rem; min-width: 0; padding: 1.15rem; border: 1px solid var(--color-border); border-radius: 1rem; background: var(--color-primary-dark); box-shadow: inset 0 1px rgba(255,255,255,.12); }
+.room-page .score-panel-heading { display: flex; align-items: baseline; justify-content: space-between; gap: .75rem; color: var(--color-background); font-size: 1.05rem; font-weight: 800; }
+.room-page .score-panel-caption { color: rgba(248, 244, 225, .7); font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.room-page .players-container { min-width: 0; gap: .65rem; }
+.room-page .player-container { max-width: none; padding: .85rem 1rem; border: 1px solid rgba(255,255,255,.18); background: rgba(255,253,245,.1); color: var(--color-background); }
+.room-page .player-container.current-player { border-color: var(--color-accent); background: rgba(254, 186, 23, .14); box-shadow: 0 0 .8rem rgba(254, 186, 23, .16); color: #fff7d6; }
+.room-page .primary-button, .room-page .secondary-button { border-radius: .7rem; font-size: 1rem; font-weight: 750; }
+.room-page .primary-button { background: var(--color-primary); color: var(--color-background); }
+.room-page .secondary-button { padding: .75rem 1rem; background: var(--color-primary-dark); color: var(--color-background); }
+.room-page button:not(:disabled):hover { background: var(--color-accent); color: #100d20; }
+
+@media (max-width: 700px) {
+    body { align-items: flex-start; }
+    .room-page { width: min(100% - 1rem, 44rem); padding-top: .5rem; }
+    .room-header { grid-template-columns: auto 1fr; gap: .75rem; }
+    .room-header > div { text-align: right; }
+    #room-role { grid-column: 1 / -1; justify-self: start; }
+    .room-page .gameplay-container {
+        grid-template-columns: 1fr;
+    }
+    .room-page .game-stage { grid-template-rows: auto minmax(6rem, auto) minmax(12rem, auto); }
+    .room-page .button-container { grid-template-columns: 1fr 1fr; }
+    .room-page .score-panel { padding: 1rem; }
+    .room-page .settings-grid label { grid-template-columns: minmax(0, 1fr) auto; }
+}

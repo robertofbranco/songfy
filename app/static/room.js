@@ -26,9 +26,11 @@ function bindControls() {
         if (!player || hostPlayers.some(name => name.toLowerCase() === player.toLowerCase())) return;
         hostPlayers.push(player);
         input.value = '';
+        setPlayerRequirement(false);
         renderPlayerLists();
         await saveLobbySettings();
     });
+    document.getElementById('add-player-input')?.addEventListener('input', () => setPlayerRequirement(false));
     document.getElementById('host-settings')?.addEventListener('submit', startGame);
     document.getElementById('play-btn')?.addEventListener('click', playSong);
     document.getElementById('reveal-btn')?.addEventListener('click', revealSong);
@@ -65,7 +67,7 @@ function renderRoom(nextState) {
     finished.hidden = nextState.status !== 'finished';
 
     if (nextState.status === 'lobby') renderLobby(nextState);
-    if (nextState.status === 'active') renderGame(nextState);
+    if (nextState.status === 'active') { clearError(); renderGame(nextState); }
     if (nextState.status === 'finished') renderFinished(nextState);
 }
 
@@ -145,13 +147,28 @@ function renderFinished(state) {
 
 async function startGame(event) {
     event.preventDefault();
+    if (!hostPlayers.length) {
+        setPlayerRequirement(true);
+        return;
+    }
+    setStartGameLoading(true);
+    // Let the browser paint the loading state before the playlist request starts.
+    await new Promise(resolve => (window.requestAnimationFrame || setTimeout)(resolve, 0));
     try {
         await hostRequest('PUT', '/settings', settingsPayload());
-        await hostRequest('POST', '/start');
-    } catch (error) { showError(error.message); }
+        renderRoom(await hostRequest('POST', '/start'));
+    } catch (error) {
+        setStartGameLoading(false);
+        if (/players?/i.test(error.message)) {
+            setPlayerRequirement(true);
+        } else {
+            showError(error.message);
+        }
+    }
 }
 
 async function saveLobbySettings() {
+    if (!hostPlayers.length) return;
     try { await hostRequest('PUT', '/settings', settingsPayload()); }
     catch (error) { showError(error.message); }
 }
@@ -253,5 +270,25 @@ function startHostHeartbeat() { setInterval(() => hostRequest('POST', '/heartbea
 function playbackLabel(status) { return ({ ready: 'Ready to play', starting: 'Starting…', playing: 'Playing excerpt', done: 'Excerpt complete', revealed: 'Answer revealed' })[status] || status; }
 function setValue(id, value) { document.getElementById(id).value = value; }
 function numberValue(id) { return Number(document.getElementById(id).value); }
+function setStartGameLoading(isLoading) {
+    const button = document.getElementById('start-game-btn');
+    const status = document.getElementById('start-game-status');
+    if (button) {
+        button.dataset.label ??= button.textContent;
+        button.disabled = isLoading;
+        button.textContent = isLoading ? 'Starting game…' : button.dataset.label;
+    }
+    if (status) status.hidden = !isLoading;
+}
+function setPlayerRequirement(isInvalid) {
+    const input = document.getElementById('add-player-input');
+    input?.classList.toggle('is-invalid', isInvalid);
+    input?.setAttribute('aria-invalid', String(isInvalid));
+    input?.setCustomValidity(isInvalid ? 'Add at least one player.' : '');
+    if (isInvalid) input?.reportValidity();
+    const pageError = document.getElementById('room-error');
+    if (pageError?.textContent === 'Add at least one player.') clearError();
+}
 function showError(message) { const error = document.getElementById('room-error'); error.textContent = message; error.hidden = false; }
+function clearError() { const error = document.getElementById('room-error'); error.textContent = ''; error.hidden = true; }
 function roomMissing() { document.body.dataset.roomMissing = 'true'; showError('This room no longer exists. Create or join another room.'); document.getElementById('lobby').hidden = true; document.getElementById('game').hidden = true; }
